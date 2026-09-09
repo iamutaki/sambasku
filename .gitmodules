@@ -1,0 +1,9 @@
+[submodule "api"]
+	path = api
+	url = https://github.com/iamutaki/sambasku-api.git
+[submodule "web"]
+	path = web
+	url = https://github.com/iamutaki/sambasku-web.git
+[submodule "admin"]
+	path = admin
+	url = https://github.com/iamutaki/sambasku-admin.git
