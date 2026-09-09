@@ -7,3 +7,9 @@
 [submodule "admin"]
 	path = admin
 	url = https://github.com/iamutaki/sambasku-admin.git
+[submodule "docs"]
+	path = docs
+	url = https://github.com/iamutaki/sambasku-docs.git
+[submodule "http"]
+	path = http
+	url = https://github.com/iamutaki/sambasku-http.git
