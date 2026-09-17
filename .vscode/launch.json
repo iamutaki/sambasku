@@ -1,65 +1,52 @@
 {
-  // Flavor dipilih compile-time lewat --dart-define=FLAVOR=<staging|production>
-  // (mobile/lib/main.dart -> mobile/lib/flavors.dart). Host API ikut flavor
-  // (mobile/lib/core/constants/env.dart).
-  //
-  // LANGSUNG dari root repo sambasku (tanpa buka window mobile terpisah):
-  //   cwd       = mobile/   -> flutter run dijalankan dari folder proyek Flutter
-  //   program   = mobile/lib/main.dart (entry point - flavor lewat toolArgs)
-  //
-  // CATATAN: target native per-flavor (Android productFlavors + iOS scheme) BELUM
-  // di-generate - android/app/build.gradle.kts belum punya productFlavors dan iOS
-  // baru punya scheme "Runner". Setelah menjalankan ./create_flavorizr.sh, tambahkan
-  // "--flavor", "<staging|production>" ke toolArgs (lihat komentar di bawah).
+  // Pola jnn_mobile: args --flavor (native Android/iOS).
+  // cwd/program: monorepo root → proyek Flutter di mobile/.
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "SambasKu (Staging)",
+      "name": "Staging",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "noDebug": true,
+      "args": ["--flavor", "staging"]
+    },
+    {
+      "name": "Staging (Debug)",
       "request": "launch",
       "type": "dart",
       "cwd": "${workspaceFolder}/mobile",
       "program": "lib/main.dart",
       "flutterMode": "debug",
-      "toolArgs": [
-        "--dart-define=FLAVOR=staging"
-        // ,"--flavor", "staging"
-      ]
+      "args": ["--flavor", "staging"]
     },
     {
-      "name": "SambasKu (Production)",
-      "request": "launch",
-      "type": "dart",
-      "cwd": "${workspaceFolder}/mobile",
-      "program": "lib/main.dart",
-      "flutterMode": "debug",
-      "toolArgs": [
-        "--dart-define=FLAVOR=production"
-        // ,"--flavor", "production"
-      ]
-    },
-    {
-      "name": "SambasKu (Staging, profile)",
+      "name": "Staging (Profile)",
       "request": "launch",
       "type": "dart",
       "cwd": "${workspaceFolder}/mobile",
       "program": "lib/main.dart",
       "flutterMode": "profile",
-      "toolArgs": [
-        "--dart-define=FLAVOR=staging"
-        // ,"--flavor", "staging"
-      ]
+      "args": ["--flavor", "staging"]
     },
     {
-      "name": "SambasKu (Staging, release)",
+      "name": "Production (Debug)",
       "request": "launch",
       "type": "dart",
       "cwd": "${workspaceFolder}/mobile",
       "program": "lib/main.dart",
-      "flutterMode": "release",
-      "toolArgs": [
-        "--dart-define=FLAVOR=staging"
-        // ,"--flavor", "staging"
-      ]
+      "flutterMode": "debug",
+      "args": ["--flavor", "production"]
+    },
+    {
+      "name": "Production (Profile)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "flutterMode": "profile",
+      "args": ["--flavor", "production"]
     }
   ]
 }
