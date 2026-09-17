@@ -13,3 +13,7 @@
 [submodule "http"]
 	path = http
 	url = https://github.com/iamutaki/sambasku-http.git
+[submodule "mobile"]
+	path = mobile
+	url = https://github.com/iamutaki/sambasku-mobile.git
+	branch = staging
