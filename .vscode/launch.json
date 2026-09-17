@@ -1,0 +1,65 @@
+{
+  // Flavor dipilih compile-time lewat --dart-define=FLAVOR=<staging|production>
+  // (mobile/lib/main.dart -> mobile/lib/flavors.dart). Host API ikut flavor
+  // (mobile/lib/core/constants/env.dart).
+  //
+  // LANGSUNG dari root repo sambasku (tanpa buka window mobile terpisah):
+  //   cwd       = mobile/   -> flutter run dijalankan dari folder proyek Flutter
+  //   program   = mobile/lib/main.dart (entry point - flavor lewat toolArgs)
+  //
+  // CATATAN: target native per-flavor (Android productFlavors + iOS scheme) BELUM
+  // di-generate - android/app/build.gradle.kts belum punya productFlavors dan iOS
+  // baru punya scheme "Runner". Setelah menjalankan ./create_flavorizr.sh, tambahkan
+  // "--flavor", "<staging|production>" ke toolArgs (lihat komentar di bawah).
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SambasKu (Staging)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define=FLAVOR=staging"
+        // ,"--flavor", "staging"
+      ]
+    },
+    {
+      "name": "SambasKu (Production)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define=FLAVOR=production"
+        // ,"--flavor", "production"
+      ]
+    },
+    {
+      "name": "SambasKu (Staging, profile)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "flutterMode": "profile",
+      "toolArgs": [
+        "--dart-define=FLAVOR=staging"
+        // ,"--flavor", "staging"
+      ]
+    },
+    {
+      "name": "SambasKu (Staging, release)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "flutterMode": "release",
+      "toolArgs": [
+        "--dart-define=FLAVOR=staging"
+        // ,"--flavor", "staging"
+      ]
+    }
+  ]
+}
