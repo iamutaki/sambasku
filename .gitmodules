@@ -17,3 +17,6 @@
 	path = mobile
 	url = https://github.com/iamutaki/sambasku-mobile.git
 	branch = staging
+[submodule "pronunciation"]
+	path = pronunciation
+	url = https://github.com/iamutaki/sambasku-pronunciation.git
