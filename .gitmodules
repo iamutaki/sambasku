@@ -20,3 +20,6 @@
 [submodule "pronunciation"]
 	path = pronunciation
 	url = https://github.com/iamutaki/sambasku-pronunciation.git
+[submodule "images"]
+	path = images
+	url = https://github.com/iamutaki/sambasku-images.git
