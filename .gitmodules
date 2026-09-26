@@ -1,25 +1,43 @@
 [submodule "api"]
 	path = api
-	url = https://github.com/iamutaki/sambasku-api.git
+	url = https://github.com/sambasku/api.git
 [submodule "web"]
 	path = web
-	url = https://github.com/iamutaki/sambasku-web.git
-[submodule "admin"]
-	path = admin
-	url = https://github.com/iamutaki/sambasku-admin.git
+	url = git@github.com:sambasku/web.git
+[submodule "console"]
+	path = console
+	url = https://github.com/sambasku/console.git
 [submodule "docs"]
 	path = docs
-	url = https://github.com/iamutaki/sambasku-docs.git
+	url = https://github.com/sambasku/docs.git
 [submodule "http"]
 	path = http
-	url = https://github.com/iamutaki/sambasku-http.git
+	url = https://github.com/sambasku/http.git
 [submodule "mobile"]
 	path = mobile
-	url = https://github.com/iamutaki/sambasku-mobile.git
+	url = https://github.com/sambasku/mobile.git
 	branch = staging
-[submodule "pronunciation"]
-	path = pronunciation
-	url = https://github.com/iamutaki/sambasku-pronunciation.git
+[submodule "audios"]
+	path = audios
+	url = https://github.com/sambasku/audios.git
 [submodule "images"]
 	path = images
-	url = https://github.com/iamutaki/sambasku-images.git
+	url = https://github.com/sambasku/images.git
+[submodule "github-pages"]
+	path = github-pages
+	url = git@github.com:sambasku/.github.git
+[submodule "reference"]
+	path = reference
+	url = git@github.com:sambasku/reference.git
+[submodule "database"]
+	path = database
+	url = https://github.com/sambasku/database.git
+[submodule "csv"]
+	path = csv
+	url = https://github.com/sambasku/csv.git
+[submodule "assets"]
+	path = assets
+	url = https://github.com/sambasku/assets.git
+[submodule "sqlite"]
+	path = sqlite
+	url = https://github.com/sambasku/sqlite.git
