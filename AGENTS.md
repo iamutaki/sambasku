@@ -512,7 +512,7 @@ entitas TIDAK boleh menulis ulang sejarah feed (pembelajaran issue #86:
 | Event | Trigger | Actor |
 |-------|---------|-------|
 | `word.created` | kata jadi published (approve usul / self-apply) | pembuat kata |
-| `word.verified` | verifikator verifikasi kata | verifikator |
+| `word.verified` | verifikator verifikasi kata (termasuk approve usul kata baru) | verifikator |
 | `contribution.image` / `contribution.audio` / `contribution.pron` / `contribution.example` | kontribusi jenis itu disetujui | kontributor |
 | `comment.created` | komentar published | penulis |
 | `vote.word` / `vote.comment` | vote +/- | pemilih |
@@ -520,6 +520,7 @@ entitas TIDAK boleh menulis ulang sejarah feed (pembelajaran issue #86:
 || `suggestion.applied` | usulan edit diterima (non-self) | pengusul ||
 || `suggestion.created` | usulan edit dikirim (pending) | pengusul ||
 || `suggestion.selfapply` | verifikator lengkapi kata langsung | verifikator ||
+|| `contribution.submitted` | "Usul kata baru" dikirim (pending review) | pengusul ||
 | `search.miss` | pencarian tanpa hasil (visible) | null |
 | `user.joined` | akun terverifikasi | user baru |
 | `card.shared` | share kartu kata | yang share |
@@ -537,7 +538,9 @@ word reports, teks bebas usulan (hanya aksi + lemma), edit tanpa perubahan.
 3. Waktu event = momen kejadian (approve/vote/post), bukan `updated_at` /
    `verified_at` kolom sumber yang bisa tertimpa.
 4. Visibility dicek read-time (soft-delete, takedown, label terlarang,
-   blocklist): event tidak dihapus, hanya disembunyikan.
+   blocklist): event tidak dihapus, hanya disembunyikan. Usulan kata/usulan
+   edit yang DITOLAK = event usulannya di-hide saat reject (hide-on-reject,
+   konsisten vote retract).
 5. Feed beranda menampilkan SEMUA event di atas; timeline profil publik =
    subset event dengan actor = pemilik profil (kecuali `search.miss` yang
    tanpa actor). Tidak ada aksi publik yang "hilang" dari salah satu

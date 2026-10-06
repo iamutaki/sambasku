@@ -16,8 +16,8 @@ tertimpa -> kata lama muncul sebagai "Baru ditambahkan").
 
 | Event | Trigger | Actor |
 |-------|---------|-------|
-| `word.created` | kata jadi published (approve usul / self-apply) | pembuat kata |
-| `word.verified` | verifikator verifikasi kata | verifikator |
+| `word.created` | kata jadi published (approve usul / self-apply, atau create langsung oleh verifikator) | pembuat kata |
+| `word.verified` | verifikator verifikasi kata (termasuk approve usul kata baru) | verifikator |
 | `contribution.image` / `contribution.audio` / `contribution.pron` / `contribution.example` | kontribusi jenis itu disetujui | kontributor |
 | `comment.created` | komentar published | penulis |
 | `vote.word` / `vote.comment` | vote +/- | pemilih |
@@ -25,6 +25,7 @@ tertimpa -> kata lama muncul sebagai "Baru ditambahkan").
 || `suggestion.applied` | usulan edit diterima (non-self) | pengusul ||
 || `suggestion.created` | usulan edit dikirim (pending) | pengusul ||
 || `suggestion.selfapply` | verifikator lengkapi kata langsung | verifikator ||
+|| `contribution.submitted` | "Usul kata baru" dikirim (pending review) | pengusul ||
 | `search.miss` | pencarian tanpa hasil (visible) | null |
 | `user.joined` | akun terverifikasi | user baru |
 | `card.shared` | share kartu kata | yang share |
@@ -42,7 +43,8 @@ usulan, edit tanpa perubahan.
 3. Waktu event = momen kejadian; jangan timpa stamp kolom sumber untuk
    "menampilkannya lagi" di feed.
 4. Visibility read-time (soft-delete/takedown/label/blocklist): event
-   disembunyikan, tidak dihapus.
+   disembunyikan, tidak dihapus. Usulan ditolak = event usulan di-hide saat
+   reject (hide-on-reject).
 5. Event tampil di feed beranda DAN timeline profil publik pemilik aksinya
    (kecuali `search.miss`). Tidak boleh hanya di satu permukaan.
 6. Wording: beranda = aktor sebagai subjek ("Menambah foto"); profil =
