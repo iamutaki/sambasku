@@ -29,8 +29,9 @@ admin Analitik. Tanpa realtime (HTTP + pull-to-refresh saja).
 | `search_miss` | `search_miss` | miss dibuat visible | `null` → UI "Seseorang" | `Mencari "…" - belum ada di kamus.` (CTA "Bantu isi" dari klien) |
 | `welcome` | `user_joined` | email terverifikasi | user baru | `Bergabung di SambasKu` |
 | `card_share` | `card_shared` | share kartu (dedupe 24 jam) | yang membagikan | `Membagikan kartu · "{lemma}"` |
-|| `suggestion` | `suggestion_created` / `suggestion_applied` / `suggestion_selfapply` | usulan dibuat / usulan diterima / verifikator lengkapi kata | pengusul / pengusul / verifikator | `Mengusulkan perubahan · "{lemma}"` / `Mengusulkan perubahan · "{lemma}"` / `Melengkapi kata · "{lemma}"` |
-| `vote` (subtitle "Verifikasi") | `word_verified` | verifikator verifikasi kata | verifikator | `Memverifikasi kata · "{lemma}"` |
+| `suggestion` | `suggestion_created` / `suggestion_applied` / `suggestion_selfapply` | usulan dibuat / usulan diterima / verifikator lengkapi kata | pengusul / pengusul / verifikator | `Mengusulkan perubahan · "{lemma}"` / `Mengusulkan perubahan · "{lemma}"` / `Melengkapi kata · "{lemma}"` |
+| `contribution` | `contribution_submitted` | "Usul kata baru" dikirim (pending review) | pengusul | `Mengusulkan kata baru · "{lemma}"` |
+| `vote` (subtitle "Verifikasi") | `word_verified` | verifikator verifikasi kata (termasuk approve usul kata baru) | verifikator | `Memverifikasi kata · "{lemma}"` |
 
 `word.created` (kontributor membuat) dan `word.verified` (verifikator
 memverifikasi) adalah dua event terpisah - tidak pernah digabung satu baris
@@ -52,6 +53,9 @@ Laporan kata (`word_reports`) sengaja **tidak** masuk feed publik.
   disaring saat dibuat; isi yang hilang lebih dari separuh ditolak.
 - `card_share` dan `suggestion` hanya aksi + lemma. Teks bebas pengusul
   (definisi, catatan, alasan) tidak pernah masuk feed.
+- Usulan yang ditolak: event `suggestion_created` / `contribution_submitted`
+  disembunyikan dari feed saat reject (hide, bukan delete - sejarah tetap
+  tercatat untuk audit dan bisa dimunculkan lagi).
 - Waktu `suggestion`: `created_at` bila tayang dulu (baseline), selain itu
   `reviewed_at`.
 

@@ -80,7 +80,10 @@ kalimat aksi berimbuhan tanpa subjek (`Menambahkan foto kata lawang`),
 diproduksi `listPublicByActor` di API; `suggestion_applied` di profil
 berframing pencapaian (`Usulan perubahan diterima`). `search_miss`
 hanya tampil di beranda (tanpa aktor). Profil sendiri tidak menampilkan
-CTA. Kontrak wording penuh: `docs/api/37-api-activity-feed.md` dan
+CTA. Kind wire `contribution` (usul kata baru, `contribution_submitted`)
+dirender seperti `suggestion`: label chip "Usulan kata baru", body
+`Mengusulkan kata baru · "lemma"`, CTA buka detail kata. Kontrak wording
+lengkap: `docs/api/37-api-activity-feed.md` dan
 `docs/api/19-api-profil-publik.md`.
 
 ## Di luar scope

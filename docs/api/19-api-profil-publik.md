@@ -67,13 +67,16 @@ KEPUTUSAN PRODUK (2026-09-21, diperbarui 2026-09-24):
   `activity/infrastructure/activity-event-feed.repository.impl.ts`
   (`listPublicByActor`) - bukan lagi 4 query agregat repo lama.
 - Kategori dipetakan dari kind event:
-  - `contribution`: `word_created` + `contribution_*` + `suggestion_applied` + `suggestion_created`
+  - `contribution`: `word_created` + `contribution_*` + `suggestion_applied` + `suggestion_created` + `contribution_submitted`
   - `comment`: `comment_created`
   - `verification`: `word_verified` + `suggestion_selfapply`
   - `vote`: `vote_word` + `vote_comment`
 - Wording summary: aksi berimbuhan tanpa subjek
   (`Menambahkan foto "lawang"`, `Memverifikasi kata "lawang"`,
-  `Usulan perubahan diterima "lawang"`, `Mengusulkan perubahan "lawang"`).
+  `Usulan perubahan diterima "lawang"`, `Mengusulkan perubahan "lawang"`,
+  `Mengusulkan kata baru "lawang"`).
+- Usulan ditolak: event usulan disembunyikan dari timeline actor juga
+  (hide-on-reject, konsisten feed beranda).
 - Cursor mode terfilter kini id event (ULID) - tetap opaque.
 - Akun terhapus: event tetap tayang, profil tetap 404 (karya tidak
   hilang bersama akun); visibility dicek read-time.
