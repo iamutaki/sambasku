@@ -39,6 +39,10 @@ memverifikasi) adalah dua event terpisah - tidak pernah digabung satu baris
 
 Lemma di body selalu dalam tanda kutip ganda (sama dengan `search_miss`); klien boleh menebalkan bagian berkutip, kecuali `comment`/`discussion` (teks bebas user).
 
+## Payload beku (#94)
+
+Copy body event vote disimpan **beku** di kolom `activity_events.payload` pada momen kejadian (`"{lemma}" sudah pas` / `"{lemma}" perlu dicek ulang` — arah dari nilai vote final). Satu sumber kebenaran: feed beranda DAN timeline profil membaca `payload` ini; flip arah vote menimpa payload lewat dedupe key sama (state terakhir, bukan riwayat). Event lama tanpa payload → fallback `bodyFor()` read-time (vote lama: live `votes`, bisa kosong). Backfill: `pnpm db:backfill-activity` section 9 (idempoten, hanya `payload IS NULL`).
+
 Laporan kata (`word_reports`) sengaja **tidak** masuk feed publik.
 
 ## Feed sehat dan aman

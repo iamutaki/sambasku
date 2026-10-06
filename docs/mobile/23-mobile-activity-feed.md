@@ -59,9 +59,18 @@ Feed beranda tidak menampilkan activity milik user yang sedang login.(App kirim
   (cache L1 `feedList`)
 - Provider: `mobile/lib/features/activity/presentation/providers/activity_feed_providers.dart`
 - UI: `mobile/lib/features/dictionary/presentation/pages/home_search_page.dart`
-  (`_ActivityFeedRow`)
+  (feed beranda langsung memakai `ActivityFeedTile`)
 - Tile: `mobile/lib/features/activity/presentation/widgets/activity_feed_tile.dart`
-  (dipakai feed beranda + daftar aktivitas profil publik)
+  (dipakai feed beranda + daftar aktivitas profil publik; #94: home tidak
+  lagi punya row duplikat — `@username` tampil di semua permukaan)
+
+## Arah vote (#94)
+
+Body vote dari API adalah payload beku (`"{lemma}" sudah pas` /
+`"{lemma}" perlu dicek ulang`) — arah ikon avatar (`voteUp`) diparse dari
+akhiran body (`endsWith('perlu dicek ulang')`). Karena payload konsisten
+ditulis `toggle-vote` di momen kejadian, parse ini akurat; event lama
+tanpa payload fallback body kosong (ikon default panah atas).
 
 ## Cache
 
