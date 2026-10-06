@@ -122,6 +122,31 @@ Command verifikasi (api): pnpm typecheck && pnpm test && pnpm lint
 
 ---
 
+## Delta #88: skip per user (panel kartu verifikator)
+
+Endpoint `POST /api/v1/admin/search-misses/:id/skip` — "pass" satu kartu
+di panel mobile (gate sama: `authenticate + authorizeRole('admin','root','reviewer')`).
+
+- **Skip = per user, bukan moderasi**: miss tidak berubah status; hanya
+  user ini yang tidak melihatnya lagi di panel. Verifikator lain tetap
+  melihat miss yang sama.
+- **Penyimpanan**: tabel generik `user_skips`
+  (`user_id, target_type='search_miss', target_id=miss.id`,
+  unique(user, target)) — TANPA migrasi baru. On conflict → update
+  `created_at` (idempotent).
+- **Exclude di list admin**: `GET /api/v1/admin/search-misses` otomatis
+  menyembunyikan miss yang sudah di-skip oleh user yang sedang request
+  (`NOT EXISTS ... user_skips` + `target_type='search_miss'`).
+  Verifikator lain tidak terpengaruh.
+- **Soft-delete tidak menghapus skip**: baris skip lama tetap berlaku
+  saat miss hidup lagi.
+- 200 `data: null`; 404 `SEARCH_MISS_NOT_FOUND` (miss sudah di-dismiss);
+  401/403 seperti endpoint admin lain.
+- Unit: `skip-search-miss.use-case.test.ts`; e2e: skip per-user
+  (hilang dari panel A, tetap terlihat oleh reviewer B).
+
+---
+
 ## Catatan Implementasi
 
 - Jangan soft-delete saat unpublish (`is_visible=false`).

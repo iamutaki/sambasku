@@ -108,17 +108,30 @@ ditampilkan di hub.
   `/review/search-misses` (`ReviewRouter.searchMisses`).
 - Isi: miss **belum terjawab** (`fulfilled=false`) — panel = kerjaan
   verifikator, bukan arsip; sort terbaru (id DESC).
-- Aksi per baris:
-  - **Tap baris** → `/contribute?lemma=&search_in=&miss_id=` prefill
-    (verifikator membuat usulan sendiri; param `guest: 1` TIDAK dikirim
-    — verifikator selalu login).
-  - **Tombol 👁** (hanya saat `is_visible=false`) →
+- **Mekanisme: deck kartu swipe** (sama seperti area verifikator,
+  `SwipeDecisionCard`): satu kartu tayang, aksi via gesture ATAU
+  action bar `[Lewati] [Singkirkan] [Tayang]`.
+  - **Pindah kartu optimis**: advance sync, request menyusul — TIDAK
+    menunggu response selesai. Kalau request gagal → kartu kembali ke
+    depan + toast destructive (pola `reinsertAtFront` verif).
+  - **Kanan / tombol Tayang** (hanya `is_visible=false`) →
     `PATCH /api/v1/admin/search-misses/:id {is_visible:true}` → miss
     tayang di beranda publik ("Dicari warga") semua user. Event feed
     `search_miss` show/hide di-emit API otomatis — mobile tanpa kerjaan
-    feed.
-  - Sudah tayang: tanpa tombol. Tarik dari tayang (unpublish) = console
-    (admin/root), bukan mobile.
+    feed. Sudah tayang: swipe kanan spring back, tombol Tayang disabled;
+    unpublish = console (admin/root), bukan mobile.
+  - **Kiri / tombol Singkirkan** → `POST /:id/dismiss` (soft delete;
+    spam / tidak layak).
+  - **Atas / tombol Lewati** → `POST /:id/skip` = skip **per user**
+    (`user_skips`, `target_type='search_miss'`): miss hilang dari panel
+    user ini saja, verifikator lain tetap melihatnya; idempotent,
+    tanpa expiry. List admin otomatis exclude skip user aktif
+    (`skipByUserId`).
+  - **Tap kartu** → `/contribute?lemma=&search_in=&miss_id=` prefill
+    (verifikator membuat usulan sendiri; param `guest: 1` TIDAK dikirim
+    — verifikator selalu login). `search_in=lemma` → field lemma Sambas,
+    `translation` → field terjemahan Indonesia.
+  - Deck habis → pesan "Selesai" + **Muat ulang**.
 - File: `lib/features/review/presentation/pages/review_search_miss_page.dart`,
   repo `data/repositories/review_search_miss_repository_impl.dart`,
   entity `domain/entities/review_search_miss.dart` (plain class +
