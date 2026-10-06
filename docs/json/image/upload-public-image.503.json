@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "PUBLIC_IMAGE_UPLOAD_UNAVAILABLE",
+  "message": "Penyimpanan gambar publik belum dikonfigurasi - isi PUBLIC_IMAGE_GITHUB_* di .env",
+  "details": null
+}

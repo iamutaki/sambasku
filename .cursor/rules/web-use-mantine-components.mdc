@@ -1,0 +1,34 @@
+# Web: selalu pakai component Mantine
+
+Semua file di `web/**` **wajib** menggunakan component dari `@mantine/core`, `@mantine/hooks`, dan package Mantine lain yang sudah terinstall.
+
+## Aturan
+
+- **Jangan** pakai elemen HTML mentah (`<button>`, `<input>`, `<div>`, dll) untuk UI interaktif.
+- **Jangan** pakai component dari library UI lain (Material UI, Chakra, Radix, Headless UI, shadcn/ui, dll).
+- Gunakan component Mantine: `Button`, `TextInput`, `Select`, `Modal`, `Drawer`, `Table`, `Card`, `Stack`, `Group`, `Grid`, `Box`, `Flex`, `Text`, `Title`, `Badge`, `Avatar`, `Tooltip`, `Popover`, `Menu`, `Tabs`, `Accordion`, `Stepper`, dsb.
+- Styling pakai `sx` prop atau `styles` API Mantine, bukan Tailwind / CSS Modules / styled-components.
+- Theme token (warna, spacing, radius, shadow) ambil dari `theme` via `useMantineTheme` atau `theme.*` di `sx`.
+
+## Contoh
+
+```tsx
+// ❌ SALAH - HTML mentah + Tailwind
+<button className="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+
+// ❌ SALAH - library lain
+import { Button as MuiButton } from '@mui/material';
+
+// ✅ BENAR - Mantine
+import { Button } from '@mantine/core';
+<Button color="blue" variant="filled">Simpan</Button>
+```
+
+## Cek cepat sebelum commit
+
+```bash
+# Harus kosong di web/ (kecuali file config, test, storybook)
+grep -rn "from '@mui\|from '@chakra\|from '@radix\|from 'lucide-react\|className=\"" web/src --include="*.tsx" | grep -v test | grep -v stories | grep -v ".d.ts"
+```
+
+Hasil harus **kosong**. Kalau ada, ganti ke Mantine equivalent.

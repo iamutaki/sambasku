@@ -1,0 +1,71 @@
+---
+description: Keamanan navigasi shell mobile - sheet root navigator, await di redirect, TickerMode
+globs: mobile/lib/**/*.dart
+alwaysApply: false
+---
+
+# Keamanan navigasi shell mobile
+
+Empat pola ini pernah menyebabkan freeze UI total (UI mati, tab tidak bisa
+pindah) di staging. Jangan diulang.
+
+## 1. Bottom sheet + navigasi: jangan pop lalu push
+
+Di sheet yang pakai `useRootNavigator: true`, JANGAN `Navigator.pop()`
+lalu `context.push()` berurutan. Pop baru memulai animasi exit (route
+masih di stack ~250ms); push di navigator yang sama bisa terpop oleh tap
+kedua, dan barrier yang desync menelan SEMUA tap di bawahnya.
+
+```dart
+// BAD: race pop+push di navigator root
+void go(String path) {
+  Navigator.of(sheetContext).pop();
+  context.push(path);
+}
+
+// GOOD: path = pop result; push setelah sheet tertutup; single-flight
+var handled = false;
+showModalBottomSheet<String>(
+  // ...
+  builder: (sheetContext) {
+    void go(String path) {
+      if (handled) return;
+      handled = true;
+      Navigator.of(sheetContext).pop(path);
+    }
+    // ...
+  },
+).then((path) {
+  if (path case final p?) {
+    if (context.mounted) context.push(p);
+  }
+});
+```
+
+Acuan: `_ContributeMenu` di
+`mobile/lib/features/activity/presentation/pages/activity_page.dart` +
+test `test/features/activity/contribute_menu_sheet_test.dart`.
+
+## 2. Await di redirect router wajib timeout
+
+GoRouter mengabaikan semua navigasi selama redirect async pending. Setiap
+`await` di redirect harus dibungkus timeout. Cek auth pakai
+`getIsAuthForGate()` (timeout 3s + cache 2s), JANGAN `getIsAuth()` polos.
+Deadline luar 5s sudah ada di `AppRouter._redirect` - biarkan, jangan
+dilepas.
+
+## 3. Jangan bungkus shell dengan TickerMode baru
+
+`_DeferredShellTicker` (app_router.dart) adalah SATU-SATUNYA pembungkus
+TickerMode shell. Riverpod mem-pause subscription di bawah TickerMode
+yang mati; flip di tengah build = setState saat build (crash) atau
+subscription ter-pause permanen. Kalau harus ubah, ingat:
+`addPostFrameCallback` TIDAK menjadwalkan frame - panggil
+`SchedulerBinding.instance.scheduleFrame()` dulu.
+
+## 4. Breadcrumb [tabfreeze]
+
+Saat menyentuh router/shell/sheet kontribusi/gerbang auth, pertahankan
+`tfLog(...)` (core/utils/tabfreeze_log.dart) dengan tag `[tabfreeze]` -
+itulah yang dibaca `adb logcat | grep tabfreeze` saat ada laporan freeze
+lapangan.

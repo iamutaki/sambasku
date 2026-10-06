@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "APPLICATION_ALREADY_EXISTS",
+  "message": "Pengajuan verifikator sudah ada. Perbaiki lewat formulir jika ditolak.",
+  "details": null
+}

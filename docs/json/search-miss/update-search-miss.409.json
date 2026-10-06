@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "error_code": "SEARCH_MISS_TERM_CONFLICT",
+  "message": "Term yang dikoreksi sudah dipakai miss lain dengan arah yang sama"
+}

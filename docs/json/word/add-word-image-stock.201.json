@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "data": {
+    "id": "01JDIMAGESTOCK000000000000",
+    "word_id": "01JDWORDMAKATN000000000000",
+    "url": "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg",
+    "provider_file_id": "pexels-photo-1640777",
+    "alt_text": "Foto: Ella Olsson / pexels",
+    "is_primary": false,
+    "status": "published",
+    "is_verified": true,
+    "is_corrected": false
+  }
+}

@@ -1,0 +1,51 @@
+---
+description: Setiap aksi publik user wajib jadi event aktivitas tercatat (feed + timeline profil)
+globs: api/src/modules/**,mobile/lib/**,docs/api/**,docs/mobile/**
+alwaysApply: false
+---
+
+# Event Aktivitas Wajib Publik
+
+Aksi pengguna yang layak dilihat publik WAJIB menghasilkan event aktivitas
+yang tercatat pada momen kejadian - bukan diturunkan belakangan dari
+timestamp kolom sumber (`verified_at`, `updated_at`). Mengedit/melengkapi
+entitas tidak boleh menulis ulang sejarah feed (issue #86: `verified_at`
+tertimpa -> kata lama muncul sebagai "Baru ditambahkan").
+
+## Daftar event resmi
+
+| Event | Trigger | Actor |
+|-------|---------|-------|
+| `word.created` | kata jadi published (approve usul / self-apply, atau create langsung oleh verifikator) | pembuat kata |
+| `word.verified` | verifikator verifikasi kata (termasuk approve usul kata baru) | verifikator |
+| `contribution.image` / `contribution.audio` / `contribution.pron` / `contribution.example` | kontribusi jenis itu disetujui | kontributor |
+| `comment.created` | komentar published | penulis |
+| `vote.word` / `vote.comment` | vote +/- | pemilih |
+| `discussion.created` | diskusi published | pembuat |
+|| `suggestion.applied` | usulan edit diterima (non-self) | pengusul ||
+|| `suggestion.created` | usulan edit dikirim (pending) | pengusul ||
+|| `suggestion.selfapply` | verifikator lengkapi kata langsung | verifikator ||
+|| `contribution.submitted` | "Usul kata baru" dikirim (pending review) | pengusul ||
+| `search.miss` | pencarian tanpa hasil (visible) | null |
+| `user.joined` | akun terverifikasi | user baru |
+| `card.shared` | share kartu kata | yang share |
+
+Bukan event (privat): kontribusi pending/rejected, word reports, teks bebas
+usulan, edit tanpa perubahan.
+
+## Wajib saat develop
+
+1. Fitur baru dengan aksi publik = daftar event bertambah di sesi yang sama
+   (implementasi + `docs/api/37-api-activity-feed.md` +
+   `docs/mobile/23-mobile-activity-feed.md`). Event tak terdaftar = bug.
+2. `word.created` dan `word.verified` tidak pernah digabung: kontributor
+   membuat, verifikator memverifikasi - dua kejadian beda (issue #85).
+3. Waktu event = momen kejadian; jangan timpa stamp kolom sumber untuk
+   "menampilkannya lagi" di feed.
+4. Visibility read-time (soft-delete/takedown/label/blocklist): event
+   disembunyikan, tidak dihapus. Usulan ditolak = event usulan di-hide saat
+   reject (hide-on-reject).
+5. Event tampil di feed beranda DAN timeline profil publik pemilik aksinya
+   (kecuali `search.miss`). Tidak boleh hanya di satu permukaan.
+6. Wording: beranda = aktor sebagai subjek ("Menambah foto"); profil =
+   kalimat aksi tanpa subjek, bentuk berimbuhan ("Menambahkan foto kata").

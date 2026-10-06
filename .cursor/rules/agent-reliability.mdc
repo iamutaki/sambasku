@@ -1,0 +1,55 @@
+---
+description: Always-on agent reliability and recovery rules
+alwaysApply: true
+---
+
+# Agent Reliability
+
+* Treat provider, network, and tool failures as recoverable infrastructure failures.
+* Do not abandon the current task.
+* Use the configured fallback provider automatically when available.
+* Do not repeatedly retry the same failed provider.
+* Preserve current task context.
+
+# Task Continuity
+
+Always maintain task continuity.
+
+When recovering from an interruption, failure, timeout, or provider switch:
+
+* Continue from the last confirmed successful operation.
+* Do not restart the task unnecessarily.
+* Inspect the current project state before making further changes.
+* Do not overwrite or undo successful work.
+* Do not repeat completed steps.
+* Reconstruct the remaining task from the original objective and current project state.
+* Continue automatically whenever the next action is unambiguous.
+
+The current repository state is the source of truth.
+
+# Tool Recovery
+
+If a tool fails due to a transient error:
+
+* Retry the operation up to 2 times.
+* Preserve the original intent and parameters.
+* If the retry succeeds, continue from the exact point of failure.
+* Never redo completed work.
+* If the same tool keeps failing, try an alternative method.
+* Do not stop the entire task because one tool call failed.
+
+Ask the user only when:
+
+* authentication or permission is required;
+* required information is genuinely unavailable;
+* the action is destructive or irreversible;
+* all recovery options have failed.
+
+# Verification
+
+After recovering from an error or provider switch:
+
+* Inspect the current state.
+* Continue from the last successful step.
+* Re-verify the remaining work against the original objective.
+* Do not claim success without reasonable verification.

@@ -1,4 +1,10 @@
-# Konfigurasi lokal Claude Code (permission dsb.) — tidak dibagikan
+# Konfigurasi lokal Claude Code (permission dsb.) - tidak dibagikan
 .claude/settings.json
-
 .DS_Store
+samples
+node_modules
+.wrangler
+.playwright-mcp
+.pnpm-store
+scripts/
+graphify-out/

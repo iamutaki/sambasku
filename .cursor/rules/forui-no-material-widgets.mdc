@@ -1,0 +1,57 @@
+---
+description: Widget Material di dalam Forui
+alwaysApply: true
+---
+
+# Jangan pakai widget Material langsung di dalam widget Forui
+
+Aplikasi mobile ini berbasis **Forui** (`FScaffold`, `FTileGroup`, `FTile`, dsb.).
+Widget Material seperti `Switch.adaptive`, `Checkbox`, `ListTile`, `Slider`
+butuh ancestor `Material` yang tidak ada di pohon Forui. Runtime crash:
+`No Material widget found`.
+
+## Aturan
+
+- Di dalam `FTile` / `FTileGroup` / `FScaffold`, pakai padanan Forui:
+  - `Switch.adaptive` -> `FSwitch` (param: `value`, `onChange`, `enabled`,
+    `semanticsLabel`; bukan `onChanged`)
+  - `Checkbox` -> `FCheckbox` (param `onChange`, `enabled`)
+  - `Slider` -> `FSlider`
+  - `ListTile` -> `FTile`
+- Kalau memang wajib pakai widget Material (jarang), bungkus subtree itu
+  dengan `Material(type: MaterialType.transparency)` dan beri komentar alasan.
+
+## Pola umum yang benar
+
+```dart
+// SALAH - crash runtime: No Material widget found
+FTile(
+  title: Text('Label'),
+  suffix: Switch.adaptive(value: v, onChanged: (x) => setState(...)),
+)
+
+// BENAR
+FTile(
+  title: Text('Label'),
+  suffix: FSwitch(
+    value: v,
+    enabled: !busy,
+    onChange: (x) => setState(...),
+  ),
+)
+```
+
+## Cegah sebelum runtime
+
+1. Sebelum commit, jalankan:
+   `grep -rn "Switch.adaptive\|Checkbox(\|ListTile(" lib/ | grep -v F"`
+   Hasilnya harus kosong di file yang memakai widget Forui.
+2. Ada dua crash lain dari pola senada yang sudah pernah terjadi:
+   - Padding negatif (`EdgeInsets.symmetric(horizontal: -x)`) - assert
+     `padding.isNonNegative`. Jangan trik full-bleed pakai padding minus;
+     keluarkan widget dari pembatasnya atau pakai `Transform`.
+   - Hook flutter_hooks di widget bukan `HookConsumerWidget` - assert
+     `HookElement._currentHookElement != null`. Widget yang memanggil
+     `useState`/`useEffect` wajib mixin `Hooks`.
+3. Saat menambah widget pihak ketiga, cek dulu library-nya butuh
+   `Material` ancestor atau tidak sebelum dipakai di dalam Forui.

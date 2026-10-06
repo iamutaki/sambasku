@@ -1,0 +1,111 @@
+---
+description: Mobile confirmation dan info error pakai bottom sheet, bukan AlertDialog
+globs: mobile/lib/**/*.dart
+alwaysApply: true
+---
+
+# Konfirmasi & info error mobile: pakai bottom sheet
+
+Semua **konfirmasi** (hapus, kirim, logout, dsb.) dan **info error** di mobile
+harus lewat **bottom sheet** (`showModalBottomSheet` / `showAppErrorSheet`),
+**bukan** `showDialog` + `AlertDialog`.
+
+## Sudut rounded (jangan diubah)
+
+Radius sheet (10px, `RoundedSuperellipseBorder`) sudah diset tema Forui lewat
+`_materialTheme()` di `mobile/lib/app.dart` + `clipBehavior: Clip.antiAlias`.
+Tanpa clip, Material anak full-bleed menutup sudut = kotak. **Jangan** set
+`shape:`/`clipBehavior:` per-call - biarkan ambil dari tema supaya seragam.
+
+## Kenapa
+
+- `AlertDialog` butuh ancestor `Material`; di pohon Forui (`FScaffold`,
+  `FTileGroup`) sering crash `No Material widget found`.
+- Bottom sheet aman di Forui, konsisten UX, tidak menggeser layout.
+- `showAppErrorSheet` sudah handle error code `RATE_LIMITED` → toast,
+  lain → sheet penuh, lalu `clearError` otomatis.
+
+## Pola wajib
+
+### 1. Konfirmasi aksi destruktif / penting
+
+```dart
+// ❌ BAD - AlertDialog
+final ok = await showDialog<bool>(
+  context: context,
+  builder: (_) => AlertDialog(
+    title: Text('Hapus akun?'),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Batal')),
+      TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Hapus')),
+    ],
+  ),
+);
+
+// ✅ GOOD - Bottom sheet pakai FTile/FTileGroup (Forui-native)
+final ok = await showModalBottomSheet<bool>(
+  context: context,
+  useRootNavigator: true,
+  isScrollControlled: true,
+  builder: (_) => Padding(
+    padding: MediaQuery.of(context).viewInsets,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FTileGroup(
+          children: [
+            FTile(title: Text('Hapus akun?'), subtitle: Text('Tindakan ini permanen.')),
+            FTile(
+              suffix: FButton(
+                style: FButtonStyle.destructive,
+                onPress: () => Navigator.pop(context, true),
+                child: Text('Hapus'),
+              ),
+            ),
+            FTile(
+              suffix: FButton(
+                onPress: () => Navigator.pop(context, false),
+                child: Text('Batal'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+);
+```
+
+### 2. Error setelah submit form
+
+```dart
+// ❌ BAD - FAlert sticky di body
+if (state.errorMessage != null)
+  FAlert(variant: FAlertVariant.destructive, title: Text(state.errorMessage!)),
+
+// ✅ GOOD - showAppErrorSheet (sudah handle rate-limit & clearError)
+ref.listen(provider.select((s) => s.errorMessage), (_, msg) {
+  if (msg == null || !context.mounted) return;
+  showAppErrorSheet(context, message: msg).whenComplete(() {
+    if (context.mounted) ref.read(provider.notifier).clearError();
+  });
+});
+```
+
+### 3. Info singkat / non-blocking (sukses, rate-limit)
+
+Pakai `showFToast` (bukan sheet, bukan dialog).
+
+## Cek cepat sebelum commit
+
+```bash
+# Harus kosong di mobile/lib (kecuali test / dev tool)
+grep -rn "showDialog\|AlertDialog" mobile/lib --include="*.dart" | grep -v test | grep -v dev_tool
+```
+
+Hasil harus **kosong**. Kalau ada, ganti ke bottom sheet / toast.
+
+## File utilitas siap pakai
+
+- `mobile/lib/shared/utils/error_bottom_sheet.dart` → `showAppErrorSheet`
+- `mobile/lib/shared/utils/toast.dart` → `showFToast`

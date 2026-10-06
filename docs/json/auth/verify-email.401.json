@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "INVALID_OTP",
+  "message": "Kode verifikasi salah atau tidak berlaku.",
+  "details": null
+}

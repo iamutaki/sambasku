@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": {
+    "provider": "openverse",
+    "query": "makan makanan",
+    "page": 1,
+    "cache_hit": false,
+    "degraded": false,
+    "media": "photo",
+    "items": [
+      {
+        "id": "openverse-photo-abc-1",
+        "kind": "photo",
+        "provider": "openverse",
+        "url": "https://example.com/a.jpg",
+        "preview_url": "https://example.com/a-thumb.jpg",
+        "width": 1080,
+        "height": 1620,
+        "duration_seconds": 0,
+        "mime_type": "image/jpeg",
+        "photographer": "Ada",
+        "username": "Ada",
+        "attribution_url": "https://www.flickr.com/photos/ada/1",
+        "unsplash_url": "https://www.flickr.com/photos/ada/1",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "source": "flickr"
+      }
+    ]
+  }
+}

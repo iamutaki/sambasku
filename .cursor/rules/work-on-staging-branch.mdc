@@ -1,0 +1,10 @@
+# Branch: selalu kerja di `staging`
+
+Kedepannya semua pekerjaan dilakukan di branch `staging`.
+
+- JANGAN pernah pindah branch (`git checkout`, `git switch`) kecuali user minta eksplisit di chat.
+- JANGAN buat branch baru kecuali user minta.
+- Sebelum mulai task, cek branch aktif (`git branch --show-current`). Kalau bukan `staging`, lapor dulu, jangan pindah sendiri.
+- Berlaku juga untuk submodule (`api`, `mobile`, `data`, dll).
+
+Pindah branch adalah keputusan user. Tugasku berhenti di: kerja di branch yang sedang aktif, lalu laporkan hasil.

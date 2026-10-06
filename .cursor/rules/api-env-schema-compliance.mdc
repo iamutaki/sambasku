@@ -1,0 +1,89 @@
+# API Env Schema Compliance Rule
+
+## Goal
+Ensure all environment variables in the API are properly defined in:
+1. `api/.env.example` (documentation and defaults)
+2. `api/wrangler.toml` (Cloudflare Workers configuration)
+3. `api/src/shared/config/env.ts` (Zod schema validation)
+
+## Required Variables
+Every new environment variable must be added to ALL THREE files above.
+
+### Core Variables
+- `APP_URL` - API service URL (Cloudflare Workers custom domain)
+- `WEB_APP_URL` - Domain for email + deep links
+- `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed origins
+- `DATABASE_URL` - Database connection string
+- `DATABASE_AUTH_TOKEN` - Turso auth token
+- `FIREBASE_PROJECT_ID` - Firebase project ID
+- `FIREBASE_CLIENT_EMAIL` - Firebase service account email
+- `GOOGLE_ANALYTICS_SA_EMAIL` - Google Analytics service account email
+- `GOOGLE_ANALYTICS_SA_PRIVATE_KEY` - Google Analytics private key
+- `GA4_PROPERTY_ID` - Google Analytics 4 property ID
+- `GOOGLE_CLIENT_ID` - Google OAuth client ID
+- `JWT_PRIVATE_KEY` - JWT private key
+- `JWT_PUBLIC_KEY` - JWT public key
+- `JWT_ACCESS_TOKEN_TTL` - JWT access token TTL in seconds
+- `JWT_REFRESH_TOKEN_TTL` - JWT refresh token TTL in seconds
+- `KAPSO_API_KEY` - Kapso WhatsApp API key
+- `KAPSO_BASE_URL` - Kapso base URL
+- `KAPSO_PHONE_NUMBER_ID` - Kapso phone number ID
+- `KBBI_PROVIDER` - KBBI provider name
+- `LEMMA_DEFINITION_CACHE_TTL_SECONDS` - Cache TTL for lemma definitions
+- `MAIL_FROM` - Email sender address
+- `MAIL_PROVIDER` - Email provider (resend/smtp)
+- `MOBILE_GA4_PROPERTY_ID` - Mobile GA4 property ID
+- `NODE_ENV` - Node environment
+- `OAUTH_REQUIRE_AZP` - Require azp claim in JWT
+- `PIXABAY_API_KEY` - Pixabay API key
+- `PRONUNCIACION_GITHUB_TOKEN` - GitHub token for audio storage
+- `PRONUNCIACION_GITHUB_URL` - GitHub URL for audio storage
+- `PUBLIC_IMAGE_PROVIDER` - Public image provider
+- `PUBLIC_IMAGE_GITHUB_TOKEN` - GitHub token for public images
+- `PUBLIC_IMAGE_GITHUB_URL` - GitHub URL for public images
+- `RAF555_BASE_URL` - Raf555 KBBI base URL
+- `REFRESH_COOKIE_DOMAIN` - Domain for refresh token cookies
+- `SEARCH_CONSOLE_SITE_URL` - Search Console site URL
+- `SHARE_BACKGROUNDS_CACHE_TTL_SECONDS` - Cache TTL for share backgrounds
+- `SUPABASE_URL` - Supabase URL
+- `SUPABASE_ANON_KEY` - Supabase anonymous key
+- `UNSPLASH_ACCESS_KEY` - Unsplash access key
+
+## Validation Rules
+1. **Zod Schema**: All variables must be properly validated in `env.ts` with appropriate types and constraints
+2. **Defaults**: Provide sensible defaults where applicable (especially for development)
+3. **Documentation**: Clear comments explaining purpose and usage in `.env.example`
+4. **Configuration**: Properly configured in `wrangler.toml` with production values
+5. **Consistency**: Same variable names across all files
+
+## Process
+When adding a new environment variable:
+1. Add to `api/.env.example` with documentation and default value
+2. Add to `api/wrangler.toml` with production value
+3. Add to `api/src/shared/config/env.ts` with proper Zod validation
+4. Run tests to ensure schema validation passes
+5. Update any related documentation if needed
+
+## Testing
+- Run `pnpm dev` to test local development
+- Run `npx wrangler dev` to test Cloudflare Workers compatibility
+- Verify all environment variables are properly loaded and validated
+
+## Failure Cases
+- Missing variable in any of the three files → schema validation error
+- Incorrect type validation → runtime error
+- Missing production value in wrangler.toml → deployment failure
+- Inconsistent variable names → configuration issues
+
+## Compliance Check
+Before committing, verify:
+```bash
+# Check schema validation
+pnpm dev
+
+# Check wrangler configuration
+npx wrangler dev
+
+# Verify all required variables are present
+grep -E "APP_URL|WEB_APP_URL|CORS_ALLOWED_ORIGINS|DATABASE_URL|DATABASE_AUTH_TOKEN|FIREBASE_|GOOGLE_ANALYTICS_|GA4_PROPERTY_ID|GOOGLE_CLIENT_ID|JWT_|KAPSO_|KBBI_|LEMMA_DEFINITION_|MAIL_|MOBILE_GA4_|NODE_ENV|OAUTH_REQUIRE_AZP|PIXABAY_|PRONUNCIACION_|PUBLIC_IMAGE_|RAF555_|REFRESH_COOKIE_|SEARCH_CONSOLE_|SHARE_BACKGROUNDS_|SUPABASE_|UNSPLASH_" api/.env.example api/wrangler.toml api/src/shared/config/env.ts
+```

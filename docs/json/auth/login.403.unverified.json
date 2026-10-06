@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "EMAIL_NOT_VERIFIED",
+  "message": "Email belum diverifikasi. Cek kotak masuk untuk kode OTP.",
+  "details": [{ "field": "email", "message": "budi@example.com" }]
+}

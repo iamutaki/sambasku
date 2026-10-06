@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "01JNOTIFAPPROVE00000000000",
+      "type": "contribution_approved",
+      "title": "Usulan disetujui",
+      "body": "Usulan kata Anda telah disetujui dan dipublikasikan.",
+      "image_url": null,
+      "target_kind": "contribution",
+      "target_id": "01JCONTRIBMAKATN0000000000",
+      "read_at": null,
+      "created_at": "2026-09-21T03:00:00.000Z"
+    },
+    {
+      "id": "01JNOTIFREJECT000000000000",
+      "type": "suggestion_rejected",
+      "title": "Usulan perubahan ditolak",
+      "body": "Usulan perubahan kata Anda ditolak. Buka Kontribusi Saya untuk melihat alasan.",
+      "image_url": null,
+      "target_kind": "suggestion",
+      "target_id": "01JSUGGESTMAKATN0000000000",
+      "read_at": "2026-09-21T04:00:00.000Z",
+      "created_at": "2026-09-21T02:00:00.000Z"
+    }
+  ],
+  "meta": {
+    "limit": 20,
+    "next_cursor": null,
+    "has_more": false
+  }
+}

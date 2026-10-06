@@ -1,0 +1,32 @@
+---
+description: Lanjutkan task via fallback provider saat LLM provider/gateway gagal. Jangan berhenti atau minta user ulang.
+globs:
+alwaysApply: true
+---
+
+# Provider Failover Hardening
+
+Saat provider LLM, model, gateway, atau upstream service gagal:
+
+1. Jangan hentikan task.
+2. Perlakukan kegagalan provider/API sebagai infrastructure failure yang bisa dipulihkan.
+3. Langsung pakai fallback provider/model yang sudah dikonfigurasi.
+4. Jangan retry provider yang sudah terbukti gagal berulang kali.
+5. Jangan minta user lanjut, retry, atau pilih provider lain secara manual.
+6. Pertahankan context percakapan, task state, hasil tool, dan pekerjaan yang selesai.
+7. Lanjutkan task dari titik persis tempat provider sebelumnya gagal.
+8. Jangan restart task dari awal.
+9. Kalau fallback pertama juga gagal, langsung pindah ke fallback berikutnya.
+10. Ulangi failover sampai ada provider yang sukses merespons.
+11. Berhenti hanya jika semua provider gagal atau memang butuh intervensi user.
+
+## Failover Priority
+
+```text
+✅ GOOD: Provider A gagal → Provider B → Provider C → ...
+❌ BAD:  Provider A gagal → stop → minta user lanjut
+```
+
+## Important
+
+Kegagalan provider bukan kegagalan task. Tujuannya menjaga kontinuitas task dengan pindah provider secara transparan.

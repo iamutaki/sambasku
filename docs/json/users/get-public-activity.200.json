@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "kind": "contribution",
+        "occurred_at": "2026-09-20T10:00:00.000Z",
+        "word_id": "01JDWORDMAKATN000000000000",
+        "lemma": "makatn",
+        "summary": "Kata: makatn"
+      },
+      {
+        "kind": "comment",
+        "occurred_at": "2026-09-19T08:30:00.000Z",
+        "word_id": "01JDWORDMAKATN000000000000",
+        "lemma": "makatn",
+        "summary": "Contoh kalimatnya bagus sekali."
+      },
+      {
+        "kind": "verification",
+        "occurred_at": "2026-09-18T14:00:00.000Z",
+        "word_id": "01JDWORDBUDU00000000000000",
+        "lemma": "budu",
+        "summary": "Memverifikasi Kata: budu"
+      },
+      {
+        "kind": "vote",
+        "occurred_at": "2026-09-18T09:15:00.000Z",
+        "word_id": "01JDWORDKUMIS000000000000",
+        "lemma": "kumis",
+        "summary": "\"kumis\" perlu dicek ulang"
+      }
+    ]
+  }
+}

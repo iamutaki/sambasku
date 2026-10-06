@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "GOOGLE_AUTH_UNAVAILABLE",
+  "message": "Masuk dengan Google sedang tidak tersedia.",
+  "details": null
+}

@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "INVALID_CREDENTIALS",
+  "message": "Kata sandi salah",
+  "details": null
+}

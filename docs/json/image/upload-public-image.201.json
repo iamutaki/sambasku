@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "url": "https://cdn.jsdelivr.net/gh/sambasku/images@main/assets/words/01JDWORDIMG00000000000000.jpg",
+    "provider": "github",
+    "provider_file_id": "assets/words/01JDWORDIMG00000000000000.jpg",
+    "sha": "a1b2c3d4e5f678901234567890abcdef12345678"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "01JDWORD0000000000000000001",
+      "lemma": "kalintiak",
+      "language_id": "01E2ELANGSMB00000000000000",
+      "language_code": "smb",
+      "word_type": "word",
+      "status": "draft",
+      "is_verified": false
+    }
+  ],
+  "meta": {
+    "limit": 20,
+    "next_cursor": null,
+    "has_more": false
+  }
+}
