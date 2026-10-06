@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "data": {
+    "provider": "pixabay",
+    "query": "makan makanan",
+    "page": 1,
+    "cache_hit": false,
+    "degraded": false,
+    "media": "photo",
+    "items": [
+      {
+        "id": "pixabay-photo-42",
+        "kind": "photo",
+        "provider": "pixabay",
+        "url": "https://cdn.pixabay.com/photo/42.jpg",
+        "preview_url": "https://cdn.pixabay.com/photo/42.jpg",
+        "width": 1080,
+        "height": 1620,
+        "duration_seconds": 0,
+        "mime_type": "image/jpeg",
+        "photographer": "Ada",
+        "username": "Ada",
+        "attribution_url": "https://pixabay.com/photos/42/",
+        "unsplash_url": "https://pixabay.com/photos/42/"
+      }
+    ]
+  }
+}

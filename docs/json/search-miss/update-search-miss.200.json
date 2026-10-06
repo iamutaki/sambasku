@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "data": {
+    "id": "01JDSEARCHMISS0000000000000",
+    "term": "kalintia",
+    "direction": "lemma",
+    "hit_count": 2,
+    "last_searched_at": "2026-09-16T10:05:00.000Z",
+    "is_fulfilled": false,
+    "is_visible": true,
+    "created_at": "2026-09-16T10:00:00.000Z"
+  }
+}

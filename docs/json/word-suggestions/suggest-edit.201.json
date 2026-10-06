@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "data": {
+    "suggestion_id": "01JQSUGGESTION000000000001",
+    "word_id": "01JQWORD000000000000000001",
+    "word_lemma": "kete'",
+    "status": "pending",
+    "created_at": "2026-09-20T10:00:00.000Z",
+    "message": "Usul perubahan berhasil dikirim. Terima kasih!"
+  }
+}

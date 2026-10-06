@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "data": {
+    "provider": "pixabay",
+    "query": "makan makanan",
+    "page": 1,
+    "cache_hit": false,
+    "degraded": false,
+    "media": "photo",
+    "items": [
+      {
+        "id": "pixabay-photo-1",
+        "kind": "photo",
+        "provider": "pixabay",
+        "url": "https://cdn.pixabay.com/photo/1/large.jpeg",
+        "preview_url": "https://cdn.pixabay.com/photo/1/large.jpeg",
+        "width": 1080,
+        "height": 1620,
+        "duration_seconds": 0,
+        "mime_type": "image/jpeg",
+        "photographer": "Jane Doe",
+        "username": "jane",
+        "attribution_url": "https://pixabay.com/photos/1/",
+        "unsplash_url": "https://pixabay.com/photos/1/"
+      }
+    ]
+  }
+}

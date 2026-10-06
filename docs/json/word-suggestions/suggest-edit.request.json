@@ -1,0 +1,38 @@
+{
+  "proposed_changes": {
+    "lemma": "ketek",
+    "notes": "Perbaikan ejaan baku",
+    "meanings": [
+      {
+        "meaning_id": "01JQMEANING000000000000001",
+        "action": "update",
+        "definition": "ketiak"
+      }
+    ],
+    "relations": [
+      {
+        "action": "add",
+        "relation_type": "synonym",
+        "word_id": "01JQWORD000000000000000002"
+      }
+    ],
+    "variants": [
+      {
+        "action": "add",
+        "form": "ketex",
+        "variant_type": "alternative"
+      }
+    ],
+    "images": [
+      {
+        "action": "add",
+        "url": "https://ik.imagekit.io/example/ketek.jpg",
+        "provider_file_id": "file_abc123",
+        "alt_text": "Ilustrasi ketek",
+        "is_primary": true
+      }
+    ]
+  },
+  "reason_code": "typo",
+  "reason_text": null
+}
