@@ -1,0 +1,39 @@
+# Konsistensi UI: Pola Sama = Tampilan Sama
+
+## Aturan inti
+
+Elemen UI yang fungsinya sama **wajib** tampak dan terletak sama di semua
+halaman. Sebelum menambah tombol/kartu/overlay, cek dulu apakah halaman lain
+sudah punya pola untuk fungsi itu. Kalau ada: **tiru polanya** (widget, posisi,
+ukuran, style), jangan bikin varian baru.
+
+## Checklist sebelum bikin elemen UI baru
+
+1. **Cari pola existing** dulu:
+   ```bash
+   grep -rn "tooltip: 'Kembali'" mobile/lib | head
+   grep -rn "Positioned(" mobile/lib/features/<fitur> | head
+   ```
+2. Tombol mengambang di atas peta: **kolom kiri-atas** (back paling atas,
+   aksi lain di bawahnya), `IconButton` + style latar `background` +
+   elevation 2. Posisi kanan-atas dikosongkan untuk kompas MapLibre.
+   Preseden: `pins_page.dart`, `wilayah_page.dart`.
+3. Kartu overlay di atas peta (panel bawah, kartu tempat): radius 16 +
+   border `theme.colors.border` + flat (tanpa shadow dekoratif), margin 16.
+   Preseden: `_PlaceCard` (`pins_page.dart`), `_BottomPanel`
+   (`wilayah_page.dart`).
+4. Gaya kartu list: ikuti Section 5a/5e mobile-base-stack (border flat,
+   compact). Jangan mix radius, border, shadow, atau padding yang beda
+   untuk kartu yang setara.
+
+## Yang dianggap "fungsinya sama"
+
+- Toggle tema di halaman apapun = posisi & widget sama.
+- Kartu info yang menempel di peta = bentuk & jarak sama.
+- Empty state, error state, tombol retry = pola sama antar fitur.
+
+## Definition of Done
+
+- [ ] Elemen setara dengan halaman lain dibandingkan dulu (buka 2 file).
+- [ ] Posisi, radius, border, padding identik dengan pola existing.
+- [ ] Tidak ada varian baru dari komponen yang sudah ada polanya.

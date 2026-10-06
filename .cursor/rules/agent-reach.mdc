@@ -1,0 +1,28 @@
+---
+description: Saat riset internet (web, YouTube, GitHub, RSS, search), pakai Agent Reach CLI
+alwaysApply: true
+---
+
+# Agent Reach untuk riset internet
+
+CLI `agent-reach` + upstream tools (yt-dlp, gh, Jina Reader, mcporter/Exa) terpasang.
+Skill lengkap di `~/.agents/skills/agent-reach/SKILL.md` - baca itu untuk referensi command.
+
+## Kapan pakai
+
+| Kebutuhan | Cara |
+|-----------|------|
+| Baca web page | `curl -s "https://r.jina.ai/URL"` |
+| YouTube subtitle/info | `yt-dlp --dump-json URL` |
+| Search repos/code GitHub | `gh search repos "query"` |
+| Baca RSS/Atom | `python3 -c "import feedparser; ..."` |
+| Semantic web search | `mcporter call exa.web_search_exa query="..." numResults=5` |
+| V2EX / B站 | lihat SKILL.md |
+
+## Prioritas dengan context-mode
+
+1. Fetch docs eksternal yang mau di-index ulang: `ctx_fetch_and_index` dulu, gagal baru Jina Reader.
+2. Riset one-off (baca 1 link, subtitle 1 video): langsung Agent Reach.
+3. Status channel: `agent-reach doctor`.
+
+Channel login (Twitter, Reddit, XHS, IG, dll) belum diaktifkan. Minta user dulu kalau dibutuhkan.

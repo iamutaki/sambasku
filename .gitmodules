@@ -41,9 +41,3 @@
 [submodule "sqlite"]
 	path = sqlite
 	url = https://github.com/sambasku/sqlite.git
-[submodule "worker"]
-	path = worker
-	url = https://github.com/sambasku/worker.git
-[submodule "data"]
-	path = data
-	url = https://github.com/sambasku/data.git

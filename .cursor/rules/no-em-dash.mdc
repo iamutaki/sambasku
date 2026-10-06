@@ -1,0 +1,30 @@
+---
+description: Larangan em dash / en dash di UI, copy, docs, dan komentar - pakai hyphen ASCII
+alwaysApply: true
+---
+
+# Tipografi: jangan pakai em/en dash
+
+**JANGAN pernah** memakai:
+
+- em dash `—` (U+2014)
+- en dash `–` (U+2013)
+
+Sering muncul dari copy AI. Selalu pakai **hyphen ASCII** `-` (U+002D).
+
+Berlaku untuk: UI copy (mobile/web/console), meta SEO, JSON-LD, pesan validasi/error, docs, komentar kode, dan string placeholder kosong.
+
+## Contoh
+
+```text
+❌ BAD: Opsional — bantu pembaca paham
+✅ GOOD: Opsional - bantu pembaca paham
+
+❌ BAD: children: detail.username ?? '—'
+✅ GOOD: children: detail.username ?? '-'
+
+❌ BAD: GET /share/backgrounds — proxy latar
+✅ GOOD: GET /share/backgrounds - proxy latar
+```
+
+Acuan lama: `docs/web/web-base-stack.md` (Gaya tulisan).

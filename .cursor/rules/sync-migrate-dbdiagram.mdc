@@ -1,0 +1,28 @@
+---
+description: Perubahan migrate/schema Drizzle wajib ikut update docs/dbdiagram.dbml
+globs: api/src/shared/database/drizzle/migrations/**,api/src/shared/database/drizzle/schema/**,docs/dbdiagram.dbml
+alwaysApply: false
+---
+
+# Sync: migrate → dbdiagram
+
+Setiap perubahan terkait **migrate** atau **schema Drizzle** wajib mengubah `docs/dbdiagram.dbml` di PR/commit yang sama (atau segera setelahnya di branch yang sama).
+
+## Pemicu (wajib update DBML)
+
+- File baru/ubah di `api/src/shared/database/drizzle/migrations/`
+- File baru/ubah di `api/src/shared/database/drizzle/schema/`
+- Rename kolom/tabel, tipe, FK, index unik, atau data seed yang merefleksikan kontrak skema (mis. domain email sistem)
+
+## Wajib
+
+- Sesuaikan `Table` / `Ref` di `docs/dbdiagram.dbml` agar menggambarkan skema **setelah** migrate.
+- Jangan biarkan DBML tertinggal di model lama sementara migrate sudah jalan.
+- Jika migrate hanya data (UPDATE tanpa ubah bentuk tabel), update DBML hanya bila catatan/diagram perlu mencerminkan fakta baru; kalau bentuk tabel tidak berubah, boleh skip dengan alasan eksplisit di ringkasan kerja.
+
+## Contoh
+
+```text
+❌ BAD: tambah migration 0025_*.sql + schema baru, docs/dbdiagram.dbml tidak disentuh
+✅ GOOD: migration + schema + docs/dbdiagram.dbml diubah bersama
+```

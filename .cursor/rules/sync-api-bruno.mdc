@@ -1,0 +1,33 @@
+---
+description: Penambahan/perubahan endpoint API wajib perbarui koleksi Bruno di http/
+globs: api/**/*.routes.ts,api/**/presentation/**/*.ts,http/**/*.bru,http/**/*.md
+alwaysApply: false
+---
+
+# Sync: API endpoint → Bruno (`http/`)
+
+Setiap **penambahan** atau **perubahan** endpoint di `api/*` wajib memperbarui koleksi Bruno di submodule `http/`.
+
+## Pemicu (wajib update Bruno)
+
+- Route baru di `*.routes.ts` / presentation layer
+- Ubah path, method, auth, header wajib, query, body, atau bentuk response yang diuji
+- Deprecate / hapus endpoint (hapus atau tandai request Bruno terkait)
+- Ubah kontrak yang dipakai env Bruno (mis. email seed login setelah migrate domain)
+
+## Wajib
+
+- Tambah/ubah file `.bru` di folder domain yang sesuai (`http/auth/`, `http/contribution/`, dll.).
+- Docs block di `.bru` selaras kontrak `docs/api/*.md` (path, status code, field penting).
+- Env yang di-commit (`http/environments/local.bru`) ikut jika kredensial/variabel request berubah.
+- Env staging/production di-gitignore: update lokal bila relevan, jangan force-commit.
+
+## Contoh
+
+```text
+❌ BAD: tambah GET /api/v1/votes/deck di api, tidak ada get-vote-deck.bru
+✅ GOOD: route + validator + get-vote-deck.bru (+ docs API bila ada)
+
+❌ BAD: rename email seed di migrate, local.bru masih admin@email.com
+✅ GOOD: migrate + seed + http/environments/local.bru + docs Bruno yang menyebut email lama
+```

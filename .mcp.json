@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "context-mode": {
+      "command": "/opt/homebrew/bin/context-mode",
+      "env": {
+        "CONTEXT_MODE_PLATFORM": "claude-code"
+      }
+    }
+  }
+}

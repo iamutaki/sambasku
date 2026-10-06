@@ -1,6 +1,9 @@
 {
   // Pola jnn_mobile: args --flavor (native Android/iOS).
   // cwd/program: monorepo root → proyek Flutter di mobile/.
+  //
+  // Local debug: floating DevTool overlay aktif (termasuk Production).
+  // Production flavor → API https://api.sambasku.com (bukan staging).
   "version": "0.2.0",
   "configurations": [
     {
@@ -13,12 +16,26 @@
       "args": ["--flavor", "staging"]
     },
     {
+      "name": "Staging (Screenshot)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "noDebug": true,
+      "args": [
+        "--flavor",
+        "staging",
+        "--dart-define=SCREENSHOT_MODE=true"
+      ]
+    },
+    {
       "name": "Staging (Debug)",
       "request": "launch",
       "type": "dart",
       "cwd": "${workspaceFolder}/mobile",
       "program": "lib/main.dart",
       "flutterMode": "debug",
+      "openDevTools": "flutter",
       "args": ["--flavor", "staging"]
     },
     {
@@ -37,6 +54,7 @@
       "cwd": "${workspaceFolder}/mobile",
       "program": "lib/main.dart",
       "flutterMode": "debug",
+      "openDevTools": "flutter",
       "args": ["--flavor", "production"]
     },
     {

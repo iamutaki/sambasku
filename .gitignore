@@ -6,4 +6,5 @@ node_modules
 .wrangler
 .playwright-mcp
 .pnpm-store
-docs/
+scripts/
+graphify-out/
