@@ -29,7 +29,7 @@ admin Analitik. Tanpa realtime (HTTP + pull-to-refresh saja).
 | `search_miss` | `search_miss` | miss dibuat visible | `null` → UI "Seseorang" | `Mencari "…" - belum ada di kamus.` (CTA "Bantu isi" dari klien) |
 | `welcome` | `user_joined` | email terverifikasi | user baru | `Bergabung di SambasKu` |
 | `card_share` | `card_shared` | share kartu (dedupe 24 jam) | yang membagikan | `Membagikan kartu · "{lemma}"` |
-| `suggestion` | `suggestion_applied` / `suggestion_selfapply` | usulan diterima / verifikator lengkapi kata | pengusul / verifikator | `Mengusulkan perubahan · "{lemma}"` / `Melengkapi kata · "{lemma}"` |
+|| `suggestion` | `suggestion_created` / `suggestion_applied` / `suggestion_selfapply` | usulan dibuat / usulan diterima / verifikator lengkapi kata | pengusul / pengusul / verifikator | `Mengusulkan perubahan · "{lemma}"` / `Mengusulkan perubahan · "{lemma}"` / `Melengkapi kata · "{lemma}"` |
 | `vote` (subtitle "Verifikasi") | `word_verified` | verifikator verifikasi kata | verifikator | `Memverifikasi kata · "{lemma}"` |
 
 `word.created` (kontributor membuat) dan `word.verified` (verifikator

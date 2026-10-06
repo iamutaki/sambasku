@@ -22,8 +22,9 @@ tertimpa -> kata lama muncul sebagai "Baru ditambahkan").
 | `comment.created` | komentar published | penulis |
 | `vote.word` / `vote.comment` | vote +/- | pemilih |
 | `discussion.created` | diskusi published | pembuat |
-| `suggestion.applied` | usulan edit diterima (non-self) | pengusul |
-| `suggestion.selfapply` | verifikator lengkapi kata langsung | verifikator |
+|| `suggestion.applied` | usulan edit diterima (non-self) | pengusul ||
+|| `suggestion.created` | usulan edit dikirim (pending) | pengusul ||
+|| `suggestion.selfapply` | verifikator lengkapi kata langsung | verifikator ||
 | `search.miss` | pencarian tanpa hasil (visible) | null |
 | `user.joined` | akun terverifikasi | user baru |
 | `card.shared` | share kartu kata | yang share |

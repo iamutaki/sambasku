@@ -67,13 +67,13 @@ KEPUTUSAN PRODUK (2026-09-21, diperbarui 2026-09-24):
   `activity/infrastructure/activity-event-feed.repository.impl.ts`
   (`listPublicByActor`) - bukan lagi 4 query agregat repo lama.
 - Kategori dipetakan dari kind event:
-  - `contribution`: `word_created` + `contribution_*` + `suggestion_applied`
+  - `contribution`: `word_created` + `contribution_*` + `suggestion_applied` + `suggestion_created`
   - `comment`: `comment_created`
   - `verification`: `word_verified` + `suggestion_selfapply`
   - `vote`: `vote_word` + `vote_comment`
 - Wording summary: aksi berimbuhan tanpa subjek
   (`Menambahkan foto "lawang"`, `Memverifikasi kata "lawang"`,
-  `Usulan perubahan diterima "lawang"`).
+  `Usulan perubahan diterima "lawang"`, `Mengusulkan perubahan "lawang"`).
 - Cursor mode terfilter kini id event (ULID) - tetap opaque.
 - Akun terhapus: event tetap tayang, profil tetap 404 (karya tidak
   hilang bersama akun); visibility dicek read-time.
