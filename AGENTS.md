@@ -549,3 +549,8 @@ word reports, teks bebas usulan (hanya aksi + lemma), edit tanpa perubahan.
    kalimat aksi tanpa subjek, bentuk berimbuhan): acuan lengkap di
    `docs/api/37-api-activity-feed.md` dan `docs/mobile/23-mobile-activity-feed.md`
    - dua file itu wajib ikut diperbarui saat daftar event berubah.
+7. Copy tampilan yang bergantung state saat kejadian (mis. arah vote)
+   dibekukan di kolom `activity_events.payload` (#94): feed beranda dan
+   timeline profil membaca payload yang sama — tidak ada kalkulasi live
+   read-time untuk copy. Flip arah vote = timpa payload (dedupe key sama,
+   state terakhir), bukan event baru.
