@@ -32,6 +32,7 @@ admin Analitik. Tanpa realtime (HTTP + pull-to-refresh saja).
 | `suggestion` | `suggestion_created` / `suggestion_applied` / `suggestion_selfapply` | usulan dibuat / usulan diterima / verifikator lengkapi kata | pengusul / pengusul / verifikator | `Mengusulkan perubahan · "{lemma}"` / `Mengusulkan perubahan · "{lemma}"` / `Melengkapi kata · "{lemma}"` |
 | `contribution` | `contribution_submitted` | "Usul kata baru" dikirim (pending review) | pengusul | `Mengusulkan kata baru · "{lemma}"` |
 | `vote` (subtitle "Verifikasi") | `word_verified` | verifikator verifikasi kata (termasuk approve usul kata baru) | verifikator | `Memverifikasi kata · "{lemma}"` |
+| `announcement` | `announcement` | admin buat/edit pengumuman (#102) | admin (root/admin) | `Pengumuman` (isi di field `announcement`) |
 
 `word.created` (kontributor membuat) dan `word.verified` (verifikator
 memverifikasi) adalah dua event terpisah - tidak pernah digabung satu baris
@@ -62,6 +63,19 @@ Laporan kata (`word_reports`) sengaja **tidak** masuk feed publik.
   tercatat untuk audit dan bisa dimunculkan lagi).
 - Waktu `suggestion`: `created_at` bila tayang dulu (baseline), selain itu
   `reviewed_at`.
+
+## Pengumuman admin (#102)
+
+`POST/GET/PATCH/DELETE /api/v1/admin/announcements` (role root/admin). Tabel
+`announcements` + write-through event kind `announcement` payload beku
+`{title, body, actionUrl?, actionLabel?, expiresAt?}` (pola #94), dedupe key
+`announcement:{id}`; edit = re-publish copy, delete = soft delete + hide event
+(pola #56). `expires_at` opsional, disaring read-time: kadaluarsa tetap tayang
+dengan `announcement.expired=true` (feed tidak bergeser). `action_url` wajib
+https + whitelist host: `sambasku.com`, `www.sambasku.com`,
+`sambasku-staging.iamutaki.com`, `sambasku.iamutaki.com`, `play.google.com`.
+List admin: keyset cursor ULID (`before`), tanpa offset. v1: feed saja, tanpa
+push notification.
 
 ## Catat share kartu
 

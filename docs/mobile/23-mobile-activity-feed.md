@@ -22,6 +22,7 @@ Tab Home menampilkan section **Aktivitas terbaru** dari
 | `word` | `/words/:id` |
 | `discussion` | `/discussions/:id` |
 | `search_miss` | `/contribute?lemma=…&miss_id=…` |
+| `announcement` | `/announcements/:id` (payload beku via `state.extra`, tanpa fetch ulang — pola #94; fallback `AnnouncementMissingPage` bila extra hilang) |
 
 Nama aktor yang linkable → profil publik.
 
@@ -63,6 +64,19 @@ Feed beranda tidak menampilkan activity milik user yang sedang login.(App kirim
 - Tile: `mobile/lib/features/activity/presentation/widgets/activity_feed_tile.dart`
   (dipakai feed beranda + daftar aktivitas profil publik; #94: home tidak
   lagi punya row duplikat — `@username` tampil di semua permukaan)
+
+## Pengumuman (#102)
+
+- Kind `announcement`: badge `megaphone` warna primary, label jenis
+  "Pengumuman", body tetap `Pengumuman` (judul asli ada di field
+  `announcement`). Mapper hanya parse field ini saat `kind == 'announcement'`
+  (id + title wajib non-empty; tanpa payload item tetap tayang, detail
+  fallback).
+- Detail `/announcements/:id` (`announcement_detail_page.dart`): render
+  payload beku dari `state.extra` — tanpa fetch ulang. Tombol aksi (opsional)
+  membuka `action_url` via `url_launcher` externalApplication, hanya scheme
+  https (host sudah di-whitelist API saat create/edit). `expired=true` →
+  banner "sudah berakhir" + tombol nonaktif, konten tetap terbaca.
 
 ## Arah vote (#94)
 
