@@ -524,6 +524,7 @@ entitas TIDAK boleh menulis ulang sejarah feed (pembelajaran issue #86:
 | `search.miss` | pencarian tanpa hasil (visible) | null |
 | `user.joined` | akun terverifikasi | user baru |
 | `card.shared` | share kartu kata | yang share |
+| `announcement` | admin buat/edit pengumuman (#102) | admin (root/admin) |
 
 Yang BUKAN event (tetap dipertahankan privat): kontribusi pending/rejected,
 word reports, teks bebas usulan (hanya aksi + lemma), edit tanpa perubahan.
