@@ -598,3 +598,17 @@ sesi-sesi sebelumnya).
 
 Batas: WIP yang sengaja ditunda (mis. menunggu keputusan Tuan) harus
 diketahui Tuan eksplisit — bukan diam-diam ditinggal.
+
+# 28. Data repo (`data/`): purge CDN otomatis, file baru langsung live
+
+Repo `data/` disajikan via jsDelivr `cdn.jsdelivr.net/gh/sambasku/data@main/...`.
+Sejak #100 ada GitHub Action `data/.github/workflows/purge-jsdelivr.yml`:
+
+1. Setiap push ke `main` repo data = **purge otomatis seluruh file** (chunk 50
+   path per request, batas API purge.jsdelivr.net). Jangan purge manual.
+2. Menambah file data baru = commit ke `main` saja; file baru otomatis
+   ter-cover (purge penuh, bukan diff-based). URL akses:
+   `https://cdn.jsdelivr.net/gh/sambasku/data@main/<path>` setelah Action hijau.
+3. Setelah push, pastikan Action hijau (tab Actions) sebelum mengandalkan
+   file baru; pending purge maksimal beberapa menit.
+4. Branch data repo hanya `main` (tidak ada staging) - review sebelum push.
