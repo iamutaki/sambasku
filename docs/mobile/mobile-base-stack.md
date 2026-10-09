@@ -775,6 +775,27 @@ IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/apinull
 Pemilihan host per flavor di `env.dart` (switch `F.appFlavor`).
 TIDAK ADA host hardcode di datasource.
 
+### Pemilihan host API oleh user (WAJIB)
+
+Tiga host API (tier failover) tidak pernah disebut ke user dengan istilah
+"tier". Label yang dipakai: **Cloudflare**, **Deno Deploy**, **Render**.
+
+- Setting ada di halaman Profil, grup "Tampilan & bantuan", tile **Server**
+  (suffix `Otomatis` / nama host + ikon kunci).
+- Pindah host = keputusan penting → **bottom sheet** (`showModalBottomSheet`,
+  `useRootNavigator: true`) berisi `FTileGroup` + tombol **Uji semua**.
+  Jangan `showDialog`/`AlertDialog`, jangan set `shape:`/`clipBehavior:`.
+- Uji ping memakai `GET /api/v1/ping` (tanpa auth, tanpa DB; field `data.host`
+  membuktikan tier yang melayani), timeout 8 s (`kHealthProbeTimeout`).
+- "Otomatis" = `setForcedTier(null)`; memilih host = `setForcedTier(index)`,
+  persist di `SharedPreferences` key `preferredApiTier` (`-1` = Otomatis).
+- Selama terkunci, cascade failover otomatis **mati** (`advanceTier()` return
+  null saat `forcedTierIndex != null`). Konsekuensi ini wajib disebut di sheet.
+- Staging hanya punya satu host → `hasFallbacks == false` → tile nonaktif.
+
+Titik masuk kode: `mobile/lib/features/profile/presentation/widgets/api_host_tile.dart`,
+`mobile/lib/core/network/failover/api_host_resolver.dart`.
+
 ## 9. Upload Gambar
 
 Dua jalur (privasi berbeda):
