@@ -68,14 +68,21 @@ Laporan kata (`word_reports`) sengaja **tidak** masuk feed publik.
 
 `POST/GET/PATCH/DELETE /api/v1/admin/announcements` (role root/admin). Tabel
 `announcements` + write-through event kind `announcement` payload beku
-`{title, body, actionUrl?, actionLabel?, expiresAt?}` (pola #94), dedupe key
-`announcement:{id}`; edit = re-publish copy, delete = soft delete + hide event
-(pola #56). `expires_at` opsional, disaring read-time: kadaluarsa tetap tayang
-dengan `announcement.expired=true` (feed tidak bergeser). `action_url` wajib
-https + whitelist host: `sambasku.com`, `www.sambasku.com`,
-`sambasku-staging.iamutaki.com`, `sambasku.iamutaki.com`, `play.google.com`.
-List admin: keyset cursor ULID (`before`), tanpa offset. v1: feed saja, tanpa
-push notification.
+`{title, body, bodyType?, actionUrl?, actionLabel?, expiresAt?}` (pola #94),
+dedupe key `announcement:{id}`; edit = re-publish copy, delete = soft delete
++ hide event (pola #56). `expires_at` opsional, disaring read-time:
+kadaluarsa tetap tayang dengan `announcement.expired=true` (feed tidak
+bergeser). `action_url` wajib https (#124: host bebas, kebijakan konten
+admin). List admin: keyset cursor ULID (`before`), tanpa offset. v1: feed
+saja, tanpa push notification.
+
+`body_type` (#124/#64): `plain|html|md|webview`, default `plain`. WAJIB
+hadir di SEMUA wire announcement — feed `/activity` (objek `announcement`,
+serializer `toWire` activity.controller), detail `/announcements/:id`, list
+pinned `/announcements/pinned` (serializer `serialize`
+announcement.controller). Satu jalur tanpa field → parser mobile jatuh
+`plain` diam-diam (md/webview "tidak render" hanya di jalur itu). Assert
+bentuk wire di batas controller/e2e, bukan unit test repo.
 
 ## Catat share kartu
 

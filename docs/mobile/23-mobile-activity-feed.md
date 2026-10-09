@@ -77,6 +77,20 @@ Feed beranda tidak menampilkan activity milik user yang sedang login.(App kirim
   membuka `action_url` via `url_launcher` externalApplication, hanya scheme
   https (host sudah di-whitelist API saat create/edit). `expired=true` →
   banner "sudah berakhir" + tombol nonaktif, konten tetap terbaca.
+- Body per `body_type` (#124/#134, `announcement_body.dart`):
+  - `plain` → Text; `md` → `MarkdownBody` native (ikut tema);
+    `html`/`webview` → `WebViewWidget` JS off, bounded box (detail 320).
+  - `webview`: body = URL (host tanpa skema dinormalisasi `https://`);
+    URL valid → `loadRequest`, selain itu dianggap string HTML. Navigasi
+    dalam diblok → browser eksternal; URL target pertama diizinkan
+    (`loadRequest` awal ikut `onNavigationRequest` di sebagian platform).
+  - Preview list/carousel (`AnnouncementBodyPreview`): teks ringan max 3
+    baris (URL → host saja, md/html di-strip) — SATU `WebViewController`
+    = platform view mahal + PageView membangun halaman tetangga, jadi
+    `WebViewWidget` hanya di halaman detail (#134: jank swipe).
+  - Padding: `FScaffold(childPad: true)` sudah kasih horizontal 12 —
+    konten di dalamnya cukup padding vertikal, jangan tambah horizontal
+    (gutter menumpuk, #134).
 
 ## Arah vote (#94)
 
