@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "INVALID_FACEBOOK_TOKEN",
+  "message": "Tidak bisa masuk dengan Facebook.",
+  "details": null
+}

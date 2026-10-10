@@ -1,0 +1,43 @@
+# Analytics Wajib di Fitur Baru
+
+Berlaku untuk semua platform: **mobile** (`mobile/`), **web** (`web/`),
+**console** (`console/`). Setiap fitur baru (screen, tombol aksi utama, alur
+konversi) **wajib** memasang analytics sebelum dianggap selesai. Perubahan/
+penambahan fitur = event analytics ikut disesuaikan. Tanpa analytics, fitur
+tidak bisa divalidasi dipakai atau tidak.
+
+## Per platform
+
+| Platform | Service | Screen view | Event kustom |
+|----------|---------|-------------|--------------|
+| Mobile | `AnalyticsService` (`mobile/lib/core/services/analytics_service.dart`) | Otomatis via `AnalyticsRouteObserver`, syarat route punya `name:` | Method `logXxx` + konstanta di `AnalyticsEvents` |
+| Web | `trackEvent` (`web/app/infrastructure/analytics/analytics.ts`) | `trackPageView` di router/layout | Tambah key di `AnalyticsEvents` (object `as const`), panggil `trackEvent` |
+| Console | Ikuti pola analytics yang ada di `console/` | - | - |
+
+## Definisi minimum
+
+1. **Screen**: mobile = route punya `name:` di RouteDefiner (cek
+   `grep -n "name:" <fitur>_router.dart`); web = `trackPageView` terpasang di
+   route baru.
+2. **Aksi utama fitur**: minimal 1 event domain dengan param identitas
+   (slug/id). Titik pasang: saat aksi terjadi (onTap/onPush), bukan di
+   `build()` widget stateless (bisa multi-fire).
+3. **Nama event**: snake_case, format `<domain>_<aksi>` (`wilayah_kec_select`,
+   `cuisine_open`). Selaras antar platform bila fiturnya sama. Jangan pakai
+   nama reserved Firebase (`notification_open`).
+4. **Tanpa PII**: jangan kirim email, nomor HP, isi form mentah di params.
+
+## Definition of Done
+
+- [ ] Screen terlacak (route name mobile / trackPageView web).
+- [ ] Event aksi inti terpasang, param identitas terkirim.
+- [ ] Event terdaftar sebagai konstanta (`AnalyticsEvents`), bukan string lepas.
+- [ ] DebugView GA4 (web: `?ga_debug=1` di prod; mobile: debug dart-define)
+      memunculkan event saat manual test.
+
+## Contoh terpasang
+
+- Mobile eksplorasi: `explore_category_tap`, `poi_open`, `wilayah_kec_select`,
+  `wilayah_desa_select`, `cuisine_open`.
+- Web: `contribute_massal_cta`, `discussion_view` (lihat
+  `web/app/infrastructure/analytics/analytics.ts`).

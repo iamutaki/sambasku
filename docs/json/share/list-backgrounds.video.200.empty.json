@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "provider": "pexels",
+    "query": "xyzzy-unknown",
+    "page": 1,
+    "cache_hit": false,
+    "degraded": true,
+    "media": "video",
+    "items": []
+  }
+}

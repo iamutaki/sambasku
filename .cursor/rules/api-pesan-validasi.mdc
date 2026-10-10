@@ -1,0 +1,30 @@
+---
+description: Pesan validasi API harus Bahasa Indonesia, ramah, tanpa jargon ULID
+globs: api/**/*.validator.ts,api/src/shared/validation/**/*.ts,docs/api/**/*.md
+alwaysApply: false
+---
+
+# Pesan validasi ke user
+
+`details[].message` dan `message` envelope tampil di form admin/web.
+Jangan bocorkan format ID internal.
+
+## Wajib
+
+- Bahasa Indonesia, kalimat pendek, tanpa istilah `ULID`, `varchar(26)`, atau "26 karakter".
+- Field yang dipilih dari daftar (kelas kata, bahasa, dialek, kategori) memakai `choiceId('Label')` di `api/src/shared/validation/id.ts`.
+- ID opaque (path, cursor, FK) memakai `opaqueId` dari file yang sama.
+
+## Contoh
+
+```ts
+// ❌ BAD
+word_class_id: z.string().length(26, 'ID harus ULID 26 karakter')
+
+// ✅ GOOD
+word_class_id: choiceId('Kelas kata')
+// kosong → "Kelas kata wajib dipilih"
+// rusak → "Kelas kata tidak valid. Pilih ulang dari daftar."
+```
+
+Kontrak lengkap: `docs/api/api-base-stack.md` Section 13 (pesan field) dan Section 19.

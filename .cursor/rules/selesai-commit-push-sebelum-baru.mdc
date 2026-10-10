@@ -1,0 +1,27 @@
+---
+description: Selesai 1 pekerjaan = commit + push ke staging dulu, baru mulai pekerjaan baru. Dilarang WIP numpuk.
+alwaysApply: true
+---
+
+# Git: tuntaskan pekerjaan lama sebelum pekerjaan baru
+
+Setiap kali **satu pekerjaan selesai** (test hijau, gate lulus) dan akan
+**dimulai pekerjaan baru**, wajib menuntaskan pekerjaan lama dulu:
+
+1. **Commit** perubahan kerjaan itu — pathspec eksplisit, file kerjaan
+   itu saja (jangan campur WIP pekerjaan lain).
+2. **Push ke staging**: kerja lewat feature branch → push branch + buat PR
+   (merge tetap keputusan Tuan); kerja langsung di `staging` → push ke
+   `staging`.
+3. **Baru** mulai pekerjaan berikutnya.
+
+DILARANG mulai pekerjaan baru sementara pekerjaan lama belum di-commit /
+belum di-push. WIP numpuk lintas pekerjaan = working tree kotor, stash
+berlapis, risiko kehilangan kerja.
+
+WIP yang sengaja ditunda (menunggu keputusan user) harus dikabari ke user
+eksplisit, bukan ditinggal diam-diam.
+
+Catatan: aturan ini MELARANG mulai kerjaan baru dengan kerjaan lama
+menggantung — ini bukan izin commit/push otomatis di luar permintaan user
+untuk hal lain (lihat no-auto-commit-push).

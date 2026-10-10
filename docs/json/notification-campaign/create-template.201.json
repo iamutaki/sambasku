@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "data": {
+    "id": "01TEMPLATE000000000000001",
+    "name": "Update kamus",
+    "title": "Kata baru minggu ini",
+    "body": "Cek entri Sambas terbaru di SambasKu.",
+    "image_url": null,
+    "deep_link_kind": "none",
+    "deep_link_value": null,
+    "created_by": "01ADMIN00000000000000001",
+    "created_at": "2026-09-24T00:00:00.000Z",
+    "updated_at": null
+  }
+}

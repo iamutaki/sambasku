@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "FACEBOOK_AUTH_UNAVAILABLE",
+  "message": "Masuk dengan Facebook sedang tidak tersedia.",
+  "details": null
+}

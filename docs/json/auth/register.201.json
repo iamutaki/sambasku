@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "user_id": "01JDUSERNEW000000000000000",
+    "username": "Budi Santoso",
+    "email": "budi@example.com",
+    "phone": "6281234567890",
+    "verification_required": true
+  }
+}

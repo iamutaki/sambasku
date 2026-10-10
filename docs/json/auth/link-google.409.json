@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "GOOGLE_ALREADY_LINKED",
+  "message": "Akun Google ini sudah terhubung ke pengguna lain.",
+  "details": null
+}

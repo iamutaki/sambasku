@@ -1,0 +1,18 @@
+# Gitignore: macOS artifacts
+
+**JANGAN PERNAH** melakukan `git add`, commit, atau include ke repo untuk:
+
+- `.DS_Store` (metadata Finder macOS)
+- `._*` (AppleDouble resource fork)
+- `.Spotlight-V100`, `.Trashes`, `.AppleDouble`
+
+`.DS_Store` sudah ter-ignore di semua `.gitignore` (root, `api`, `mobile`, dll).
+Jangan hapus atau override entri ignore tersebut. Jangan paksa add dengan
+`git add -f` untuk file di atas.
+
+Kalau menemukan `.DS_Store` muncul sebagai untracked, biarkan ter-ignore.
+Untuk membersihkan file fisik lokal:
+
+```sh
+find . -name '.DS_Store' -not -path './.git/*' -delete
+```

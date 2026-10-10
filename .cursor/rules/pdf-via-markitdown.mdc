@@ -1,0 +1,27 @@
+---
+description: Saat user memberi PDF, convert ke markdown dengan markitdown dulu, baru baca hasil md-nya
+alwaysApply: true
+---
+
+# PDF: convert dulu via markitdown
+
+Saat user memberikan file PDF (path, attachment, atau minta baca PDF):
+
+1. Jangan pernah baca PDF langsung dengan Read tool.
+2. Convert dulu ke markdown:
+   ```bash
+   markitdown path/ke/file.pdf > path/ke/file.md
+   ```
+3. Baca file `.md` hasil convert dengan Read tool.
+4. Kerjakan task dari konten md tersebut.
+
+## Kenapa
+
+- Read tool di PDF terpotong karakter limit, hasilnya lossy.
+- Markdown hasil markitdown lebih mudah dicari (Grep), dikutip, dan di-embed ke context.
+
+## Catatan
+
+- Letakkan `.md` hasil convert di sebelah PDF asli, kecuali user minta lokasi lain.
+- Kalau `markitdown` belum terinstall: `pipx install markitdown` atau `pip install markitdown`, lalu ulangi.
+- PDF asli jangan dihapus atau dimodifikasi.

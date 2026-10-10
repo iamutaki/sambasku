@@ -1,0 +1,42 @@
+# Data Validation Rule - No Manual Counting
+
+## Masalah
+
+Manual counting of kecamatan/desa entries leads to errors (e.g., claiming 189 instead of 195 villages). Human counting is unreliable.
+
+## Aturan Wajib
+
+**SEBELUM commit data wilayah:**
+
+1. **Hitung programmatis** dari sumber otoritatif (DPMD/BPS CSV).
+2. **Cocokkan 10-digit BPS code** setiap desa (format: `6101XXXXXX`).
+3. **Verifikasi 19 kecamatan + 195 desa** tepat sebelum generate `regions.json`.
+
+## Implementasi
+
+Script validasi di `scripts/validate-regions.py` (akan dibuat). Jalankan:
+
+```bash
+python3 scripts/validate-regions.py data/regions.json
+```
+
+Harus output:
+```
+✅ 19 kecamatan
+✅ 195 desa
+✅ Semua desa punya kode BPS 10-digit (6101...)
+✅ Semua desa punya parentId kecamatan valid
+```
+
+## Contoh Error Lalu
+
+| Error | Penyebab |
+|-------|----------|
+| "189 desa" | Manual copy-paste tidak lengkap dari tabel DPMD |
+| Desa duplikat dihapus | Nama sama tapi beda kecamatan (contoh: Parit Baru di Tebas DAN Salatiga) |
+| Kode BPS hilang | Tidak extract dari CSV BPS 2025 |
+
+## Enforcement
+
+- PR yang mengubah `data/regions.json` tanpa validasi script = **blocked**.
+- CI akan jalan `validate-regions.py` otomatis (akan ditambahkan ke workflow).

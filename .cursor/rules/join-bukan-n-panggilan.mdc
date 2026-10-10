@@ -1,0 +1,29 @@
+---
+description: Read-path wajib JOIN/batch, bukan N panggilan per baris — untuk hemat subrequest Cloudflare.
+alwaysApply: true
+---
+
+# Query: JOIN / batch, bukan N panggilan (hemat subrequest)
+
+Satu request HTTP di API = satu Worker invocation Cloudflare; setiap query ke
+Turso = 1 subrequest (limit default 50/invocation). Pola boros pernah membuat
+feed error `Too many subrequests by single Worker invocation` (issue
+mobile#103) — feed ~100+ subrequest per request.
+
+Wajib:
+
+- **Tulis semua field yang dibutuhkan dalam SATU query** dengan
+  `JOIN`/`LEFT JOIN` (pilih kolom yang dipakai kontrak wire saja), atau
+  batch `IN (...)` + resolve via `Map`. Lalu transform row → wire secara
+  **synchronous** (tanpa `await` per baris).
+- **Dilarang** loop `for`/`.map`/`.forEach` berisi `await` query per baris
+  (N+1) di read-path — hapus dulu, JOIN-kan.
+- `Promise.all` beberapa panggilan repo = N subrequest juga; gabung jadi
+  satu query bila bisa (contoh: profil publik mode merge 4 panggilan →
+  1 query `merged`).
+- Jangan panggil API/service luar berulang per baris dalam satu request.
+- Endpoint feed/timeline wajib punya **test budget query** (spy
+  `client.execute`, assert ≤3 query/request). Acuan:
+  `api/src/modules/activity/__tests__/e2e/v1/activity-query-count.e2e.test.ts`.
+- `[limits] subrequests` di `wrangler.toml` = jaring pengaman, bukan alasan
+  tetap boros. Target: 1–2 query per request.

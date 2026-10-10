@@ -1,0 +1,1168 @@
+// ============================================================
+// Sambasku DB schema - synced from drizzle *.schema.ts
+// Source of truth for runtime: api/.../drizzle/schema + migrations
+// This file is documentation / dbdiagram.io visualization only.
+// Generated to match schema as of migration 0026.
+// Dialect: SQLite (Turso). Types mapped for dbdiagram readability
+// (ULID columns shown as varchar(26); timestamps as timestamp).
+// Planned-only tables (sources, translations memory, etc.) omitted
+// until they exist in schema/migrations.
+// ============================================================
+
+// ============================================================
+// AUTH / USERS
+// ============================================================
+
+Table users {
+  id varchar(26) [pk]
+  username text [not null, unique]
+  display_name text [not null, default: '']
+  bio text
+  email text [not null, unique]
+  phone text
+  // role dihapus (0052) - lihat tabel user_roles. Field `role` di API tetap
+  // dikirim sebagai deprecated (derived: role tertinggi dari user_roles).
+  is_active boolean [not null, default: true]
+  can_contribute boolean [not null, default: true, note: 'soft pause UGC tulis: kata/media/usul, komentar, diskusi']
+  contribute_muted_until timestamp [note: 'mute sementara dari policy abuse; null = tidak mute']
+  email_verified boolean [not null, default: false]
+  email_verified_at timestamp [note: 'waktu verifikasi (OTP sukses); null = belum / backfill ke created_at']
+  read_contribution_guide_at timestamp [note: 'waktu tap Mengerti di guide swipe halaman kontribusi; null = belum baca']
+  avatar_url text
+  avatar_provider text
+  avatar_provider_file_id text
+  avatar_sha text
+  created_at timestamp [not null]
+  updated_at timestamp
+  last_seen_at timestamp [note: 'piggyback presence dari request authenticated']
+  deleted_at timestamp
+
+  Indexes {
+    phone [unique, name: 'users_phone_unique', note: 'partial: phone is not null']
+    last_seen_at [name: 'users_last_seen_at_idx']
+  }
+}
+
+
+Table ugc_abuse_events {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  signal text [not null, note: 'input_rejected | heavy_censor | rate_lockout | comment_takedown | contribution_spam_reject | policy_*']
+  weight integer [not null, default: 0]
+  entity_type text
+  entity_id text
+  meta text [note: 'JSON opsional']
+  created_at timestamp [not null]
+
+  Indexes {
+    (user_id, created_at) [name: 'ugc_abuse_events_user_created_idx']
+  }
+}
+
+
+Table ugc_anon_abuse_events {
+  id varchar(26) [pk]
+  subject_kind text [not null, note: 'ip | device']
+  subject_key text [not null]
+  signal text [not null]
+  weight integer [not null, default: 0]
+  entity_type text
+  entity_id text
+  meta text
+  created_at timestamp [not null]
+
+  Indexes {
+    (subject_kind, subject_key, created_at) [name: 'ugc_anon_abuse_events_subject_created_idx']
+  }
+}
+
+
+Table ugc_anon_mutes {
+  subject_kind text [not null, note: 'ip | device']
+  subject_key text [not null]
+  muted_until timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (subject_kind, subject_key) [pk]
+  }
+}
+
+
+Table auth_identities {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  provider text [not null]
+  provider_user_id text [not null]
+  email_at_provider text
+  created_at timestamp [not null]
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (provider, provider_user_id) [unique, name: 'auth_identities_provider_uid_unique']
+    user_id [name: 'auth_identities_user_idx']
+  }
+}
+
+
+Table refresh_tokens {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  token_hash text [not null, unique]
+  client_id text
+  device_info text
+  ip_address text
+  is_revoked boolean [not null, default: false]
+  rotated_at timestamp
+  expires_at timestamp [not null]
+  created_at timestamp [not null]
+
+  Indexes {
+    user_id [name: 'refresh_tokens_user_id_idx']
+    client_id [name: 'refresh_tokens_client_id_idx']
+  }
+}
+
+
+Table password_reset_tokens {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  token_hash text [not null, unique]
+  is_used boolean [not null, default: false]
+  expires_at timestamp [not null]
+  created_at timestamp [not null]
+
+  Indexes {
+    user_id [name: 'password_reset_tokens_user_id_idx']
+  }
+}
+
+
+Table email_verification_otps {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  code_hash text [not null]
+  expires_at timestamp [not null]
+  attempt_count integer [not null, default: 0]
+  created_at timestamp [not null]
+
+  Indexes {
+    user_id [unique, name: 'email_verification_otps_user_unique']
+    user_id [name: 'email_verification_otps_user_idx']
+  }
+}
+
+
+Table account_deletion_tokens {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  token_hash text [not null, unique]
+  is_used boolean [not null, default: false]
+  expires_at timestamp [not null]
+  created_at timestamp [not null]
+
+  Indexes {
+    user_id [name: 'account_deletion_tokens_user_id_idx']
+  }
+}
+
+
+Table api_clients {
+  id varchar(26) [pk]
+  client_id text [not null, unique]
+  client_secret_hash text
+  name text [not null]
+  description text
+  owner_user_id varchar(26) [ref: > users.id]
+  status text [not null, default: 'pending']
+  is_first_party boolean [not null, default: false]
+  homepage_url text
+  privacy_url text
+  redirect_uris text [not null, default: '[]']
+  allowed_scopes text [not null, default: '[]']
+  allowed_channels text [not null, default: '[]']
+  rate_limit_tier text [not null, default: 'standard']
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    status [name: 'api_clients_status_idx']
+    owner_user_id [name: 'api_clients_owner_idx']
+  }
+}
+
+
+Table user_consents {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  document_type text [not null]
+  document_version text [not null]
+  accepted_at timestamp [not null]
+  source text [not null]
+  client_id text
+  request_id text
+  ip text
+  user_agent text
+
+  Indexes {
+    (user_id, document_type, accepted_at, ) [name: 'user_consents_user_type_accepted_idx']
+  }
+}
+
+
+Table legal_documents {
+  id varchar(26) [pk]
+  document_type text [not null]
+  version text [not null]
+  title text [not null]
+  body_markdown text [not null]
+  status text [not null, default: 'draft']
+  published_at timestamp
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (document_type, version) [unique, name: 'legal_documents_type_version_uidx']
+    (document_type, status) [name: 'legal_documents_type_status_idx']
+  }
+}
+
+
+Table app_settings {
+  key text [pk]
+  value text [not null]
+  updated_at timestamp [not null]
+  updated_by varchar(26) [ref: > users.id]
+}
+
+
+// ============================================================
+// LANGUAGE / DIALECT
+// ============================================================
+
+Table languages {
+  id varchar(26) [pk]
+  code text [not null, unique]
+  name text [not null]
+  native_name text
+  description text
+  is_active boolean [not null, default: true]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+}
+
+
+Table dialects {
+  id varchar(26) [pk]
+  language_id varchar(26) [not null, ref: > languages.id]
+  code text [not null]
+  name text [not null]
+  description text
+  is_active boolean [not null, default: true]
+  is_default boolean [not null, default: false]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (language_id, code) [unique, name: 'dialects_language_code_unique']
+    language_id [unique, name: 'dialects_one_default_per_language_idx', note: 'partial: is_default = 1 and deleted_at is null']
+  }
+}
+
+
+Table word_classes {
+  id varchar(26) [pk]
+  parent_id text
+  code text [not null, unique]
+  name text [not null]
+  alias text
+  description text
+  created_at timestamp [not null]
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+  updated_at timestamp
+}
+
+
+Table categories {
+  id varchar(26) [pk]
+  parent_id text
+  name text [not null]
+  description text
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    name [unique, name: 'categories_active_name_idx', note: 'partial: deleted_at is null']
+  }
+}
+
+
+// ============================================================
+// WORDS
+// ============================================================
+
+Table words {
+  id varchar(26) [pk]
+  language_id varchar(26) [not null, ref: > languages.id]
+  lemma text [not null]
+  lemma_allows_comma boolean [not null, default: false]
+  notes text
+  word_type text [not null, default: 'word']
+  usage_labels json [not null, default: '[]']
+  status text [not null, default: 'draft']
+  is_verified boolean [not null, default: false]
+  verified_by varchar(26) [ref: > users.id]
+  verified_at timestamp
+  is_corrected boolean [not null, default: false]
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+  takedown_reason_code text
+  takedown_note text
+  taken_down_by varchar(26) [ref: > users.id]
+  taken_down_at timestamp
+  import_session_id varchar(26) [ref: > word_import_sessions.id, note: 'Sesi impor yang menciptakan kata - untuk rollback batch']
+
+  Indexes {
+    (language_id, lemma) [name: 'words_language_lemma_idx']
+    (lower(lemma), id) [name: 'words_lemma_az_idx']
+    (status, verified_at, id) [name: 'words_published_recent_idx']
+    import_session_id [name: 'words_import_session_id_idx']
+  }
+}
+
+
+Table word_variants {
+  id varchar(26) [pk]
+  word_id varchar(26) [not null, ref: > words.id]
+  form text [not null]
+  variant_type text [not null, default: 'alternative']
+  affix_type text
+  affix_value text
+  dialect_id varchar(26) [ref: > dialects.id]
+  notes text
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (word_id, form, dialect_id) [unique, name: 'word_variants_unique']
+    word_id [name: 'word_variants_word_idx']
+  }
+}
+
+
+Table meanings {
+  id varchar(26) [pk]
+  word_id varchar(26) [not null, ref: > words.id]
+  word_class_id varchar(26) [ref: > word_classes.id]
+  inherited_from_meaning_id text
+  definition text [not null]
+  is_have_definition boolean [not null, default: true]
+  is_have_translation boolean [not null, default: true]
+  meaning_source text [not null, default: 'manual', note: 'manual | kbbi | kbbi_edited']
+  order_index integer [not null, default: 0]
+  notes text
+  status text [not null, default: 'published']
+  is_verified boolean [not null, default: false]
+  is_corrected boolean [not null, default: false]
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (word_id, order_index) [name: 'meanings_word_order_idx']
+    inherited_from_meaning_id [name: 'meanings_inherited_from_idx']
+    (word_id, status) [name: 'meanings_word_status_idx']
+  }
+}
+
+
+Table meaning_translations {
+  id varchar(26) [pk]
+  meaning_id varchar(26) [not null, ref: > meanings.id]
+  language_id varchar(26) [not null, ref: > languages.id]
+  translation_text text [not null]
+  translation_type text [not null, default: 'direct']
+  translation_allows_comma boolean [not null, default: false]
+  notes text
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+
+  Indexes {
+    (meaning_id, language_id, translation_text) [unique, name: 'meaning_translations_unique']
+  }
+}
+
+
+Table examples {
+  id varchar(26) [pk]
+  meaning_id varchar(26) [not null, ref: > meanings.id]
+  source_language_id varchar(26) [not null, ref: > languages.id]
+  source_sentence text [not null]
+  target_language_id varchar(26) [ref: > languages.id]
+  target_sentence text
+  source_type text
+  source_reference text
+  notes text
+  status text [not null, default: 'published']
+  is_verified boolean [not null, default: false]
+  is_corrected boolean [not null, default: false]
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+}
+
+
+Table word_categories {
+  word_id varchar(26) [not null, ref: > words.id]
+  deleted_at timestamp
+  category_id varchar(26) [not null, ref: > categories.id]
+
+  Indexes {
+    (word_id, category_id) [pk]
+  }
+}
+
+
+Table lexical_relations {
+  id varchar(26) [pk]
+  source_word_id varchar(26) [not null, ref: > words.id]
+  target_word_id varchar(26) [not null, ref: > words.id]
+  relation_type text [not null]
+  notes text
+  created_by varchar(26) [ref: > users.id]
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (source_word_id, target_word_id, relation_type) [unique, name: 'lexical_relations_unique']
+    target_word_id [name: 'lexical_relations_target_idx']
+  }
+}
+
+
+Table pronunciations {
+  id varchar(26) [pk]
+  word_id varchar(26) [not null, ref: > words.id]
+  dialect_id varchar(26) [ref: > dialects.id]
+  notation text [not null, default: 'ipa']
+  value text [not null]
+  audio_url text
+  speaker_name text
+  notes text
+  status text [not null, default: 'published']
+  is_verified boolean [not null, default: false]
+  is_corrected boolean [not null, default: false]
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (word_id, dialect_id, notation, value) [unique, name: 'pronunciations_unique']
+  }
+}
+
+
+Table word_images {
+  id varchar(26) [pk]
+  word_id varchar(26) [not null, ref: > words.id]
+  provider text [not null, default: 'imagekit']
+  provider_file_id text [not null]
+  sha text
+  url text [not null]
+  alt_text text
+  is_primary boolean [not null, default: false]
+  content_warnings json [not null, default: '[]']
+  attribution json [note: 'Kredit foto stock {name, url?, license?, license_url?, source?}; null untuk upload user']
+  status text [not null, default: 'published']
+  is_verified boolean [not null, default: false]
+  is_corrected boolean [not null, default: false]
+  created_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  deleted_at timestamp
+
+  Indexes {
+    (word_id, provider, provider_file_id) [unique, name: 'word_images_word_file_unique']
+    word_id [name: 'word_images_word_idx']
+  }
+}
+
+
+Table word_audios {
+  id varchar(26) [pk]
+  word_id varchar(26) [not null, ref: > words.id]
+  example_id varchar(26) [ref: > examples.id]
+  dialect_id varchar(26) [ref: > dialects.id]
+  provider text [not null, default: 'github']
+  provider_file_id text [not null]
+  sha text
+  url text [not null]
+  mime_type text [not null]
+  file_size integer [not null]
+  duration_ms integer
+  speaker_name text
+  is_primary boolean [not null, default: false]
+  status text [not null, default: 'published']
+  is_verified boolean [not null, default: false]
+  is_corrected boolean [not null, default: false]
+  created_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  deleted_at timestamp
+
+  Indexes {
+    (provider, provider_file_id) [unique, name: 'word_audios_file_unique']
+    word_id [name: 'word_audios_word_idx']
+    example_id [name: 'word_audios_example_idx']
+  }
+}
+
+
+Table word_edit_suggestions {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  word_id varchar(26) [not null, ref: > words.id]
+  proposed_changes json [not null]
+  reason text [not null]
+  reason_code text [not null, default: 'other']
+  status text [not null, default: 'pending']
+  reviewed_by varchar(26) [ref: > users.id]
+  reviewed_at timestamp
+  review_comment text
+  baseline_snapshot json
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (word_id, status) [name: 'suggestions_word_status_idx']
+    (user_id, created_at) [name: 'suggestions_user_created_idx']
+    (status, created_at) [name: 'suggestions_status_created_idx']
+    reason_code [name: 'suggestions_reason_code_idx']
+  }
+}
+
+
+Table word_import_sessions {
+  id varchar(26) [pk]
+  triggered_by varchar(26) [not null, ref: > users.id]
+  attributed_to varchar(26) [not null, ref: > users.id]
+  source_label text
+  support_name text [note: 'Nama sumber sitasi (situs/penerbit)']
+  support_type text [note: 'web | book | article | other']
+  support_address text [note: 'URL atau alamat fisik']
+  support_title text [note: 'Judul artikel/buku']
+  support_desc text [note: 'Keterangan tambahan sumber']
+  claimed_by varchar(26) [ref: > users.id, note: 'Admin yang mengklaim batch ke user']
+  claimed_at timestamp
+  status text [not null]
+  total integer [not null, default: 0]
+  created_count integer [not null, default: 0]
+  duplicates_count integer [not null, default: 0]
+  meanings_added_count integer [not null, default: 0]
+  invalid_count integer [not null, default: 0]
+  items_json text [not null, default: '[]']
+  created_at timestamp [not null]
+  finished_at timestamp
+  rolled_back_at timestamp [note: 'Soft-delete massal kata sesi ini sudah dijalankan']
+  rolled_back_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (finished_at, id) [name: 'word_import_sessions_finished_id_idx']
+  }
+}
+
+
+// ============================================================
+// CONTRIBUTION / REVIEW
+// ============================================================
+
+Table contributions {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  entity_type text [not null]
+  entity_id varchar(26) [not null]
+  action text [not null]
+  status text [not null, default: 'pending']
+  description text
+  guest_display_name text [note: 'Nama opsional tamu (tanpa akun); atribusi teks bebas']
+  search_miss_id varchar(26) [ref: > search_misses.id]
+  reopened_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (user_id, created_at) [name: 'contributions_user_created_idx']
+    (entity_type, entity_id) [name: 'contributions_entity_idx']
+    status [name: 'contributions_status_idx']
+    search_miss_id [name: 'contributions_search_miss_idx']
+    (status, reopened_by) [name: 'contributions_status_reopened_by_idx']
+  }
+}
+
+
+Table contribution_reviews {
+  id varchar(26) [pk]
+  contribution_id varchar(26) [not null, ref: > contributions.id]
+  reviewer_id varchar(26) [ref: > users.id]
+  status text [not null, default: 'pending']
+  comment text
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (contribution_id, reviewer_id) [name: 'contribution_reviews_contribution_reviewer_idx']
+  }
+}
+
+
+Table search_misses {
+  id varchar(26) [pk]
+  term text [not null]
+  direction text [not null, default: 'lemma']
+  hit_count integer [not null, default: 1]
+  last_searched_at timestamp [not null]
+  is_visible boolean [not null, default: false]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (term, direction) [unique, name: 'search_misses_term_direction_unique']
+  }
+}
+
+Table search_miss_searchers {
+  id varchar(26) [pk]
+  search_miss_id varchar(26) [not null, ref: > search_misses.id]
+  user_id varchar(26) [not null, ref: > users.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (search_miss_id, user_id) [unique, name: 'search_miss_searchers_miss_user_unique']
+    (user_id, search_miss_id) [name: 'search_miss_searchers_user_miss_idx']
+  }
+}
+
+Table search_daily {
+  day varchar(10) [pk, note: 'YYYY-MM-DD WIB']
+  count integer [not null, default: 0]
+}
+
+Table user_roles {
+  user_id varchar(26) [not null, ref: > users.id]
+  role text [not null, note: 'multi role: satu user bisa pegang banyak role']
+
+  Indexes {
+    (user_id, role) [pk, name: 'user_roles_user_id_role_pk']
+    user_id [name: 'user_roles_user_id_idx']
+    role [name: 'user_roles_role_idx']
+  }
+}
+
+Table audit_logs {
+  id varchar(26) [pk]
+  user_id varchar(26) [ref: > users.id]
+  action text [not null]
+  entity_type text [not null]
+  entity_id varchar(26) [not null]
+  old_data json
+  new_data json
+  request_id text
+  created_at timestamp [not null]
+  source_contribution_id text
+
+  Indexes {
+    (entity_type, entity_id, created_at) [name: 'audit_logs_entity_created_idx']
+    (user_id, created_at) [name: 'audit_logs_user_created_idx']
+    request_id [name: 'audit_logs_request_id_idx']
+    source_contribution_id [name: 'audit_logs_source_contribution_idx']
+  }
+}
+
+// Backup full Turso (repo sambasku/sqlite) - ditulis CI sqlite via DATABASE_URL.
+// Tanpa FK ke users (cron / akun terhapus tidak memecah INSERT).
+Table database_backup_logs {
+  id varchar(26) [pk]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+  triggered_by_user_id varchar(26) [note: 'ULID admin; tanpa FK']
+  triggered_by_username text
+  trigger_source text [not null, default: 'console', note: 'console | schedule | manual']
+  dry_run boolean [not null, default: false]
+  status text [not null, note: 'running | succeeded | failed']
+  time_start timestamp
+  time_end timestamp
+  duration_ms integer
+  size_bytes integer [note: 'Ukuran file .tar.gz.age terenkripsi']
+  sha256 text
+  database_label text
+  asset_name text
+  release_url text
+  github_release_tag text
+  github_run_id text
+  github_run_url text
+  error_message text
+
+  Indexes {
+    created_at [name: 'database_backup_logs_created_idx']
+    (status, created_at) [name: 'database_backup_logs_status_created_idx']
+  }
+}
+
+
+// ============================================================
+// ENGAGEMENT
+// ============================================================
+
+Table votes {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  entity_type text [not null]
+  entity_id varchar(26) [not null]
+  value integer [not null]
+  client_id text
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (user_id, entity_type, entity_id) [unique, name: 'votes_user_target_unique']
+    (entity_type, entity_id) [name: 'votes_target_idx']
+    (user_id, id) [name: 'votes_user_id_id_idx']
+    client_id [name: 'votes_client_id_idx']
+  }
+}
+
+// Skip per user: deck vote (word) dan antrean review (contribution).
+// Bukan vote dan bukan keputusan. Target tanpa FK (preseden votes).
+Table user_skips {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  target_type text [not null, note: 'word | contribution']
+  target_id varchar(26) [not null]
+  created_at timestamp [not null]
+
+  Indexes {
+    (user_id, target_type, target_id) [unique, name: 'user_skips_user_target_unique']
+  }
+}
+
+
+Table comments {
+  id varchar(26) [pk]
+  word_id varchar(26) [not null, ref: > words.id]
+  user_id varchar(26) [not null, ref: > users.id]
+  body text [not null]
+  body_original text
+  audio_url text
+  audio_mime_type text
+  audio_file_size integer
+  audio_duration_ms integer
+  audio_provider text
+  audio_provider_file_id text
+  audio_sha text
+  status text [not null, default: 'published']
+  reviewed_by varchar(26) [ref: > users.id]
+  reviewed_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (word_id, status, id) [name: 'comments_word_status_idx']
+    (status, id) [name: 'comments_status_idx']
+    (user_id, status, id) [name: 'comments_user_status_id_idx']
+  }
+}
+
+
+Table comment_blocklist_words {
+  id varchar(26) [pk]
+  word text [not null]
+  created_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    word [name: 'comment_blocklist_words_word_idx']
+    id [name: 'comment_blocklist_words_id_idx']
+  }
+}
+
+
+Table bookmarks {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  word_id varchar(26) [not null, ref: > words.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (user_id, word_id) [unique, name: 'bookmarks_user_word_unique']
+    (user_id, id) [name: 'bookmarks_user_id_id_idx']
+  }
+}
+
+
+Table word_reports {
+  id varchar(26) [pk]
+  word_id varchar(26) [not null, ref: > words.id]
+  image_id varchar(26) [ref: > word_images.id]
+  user_id varchar(26) [not null, ref: > users.id]
+  reason_code text [not null]
+  note text
+  status text [not null, default: 'open']
+  resolution text
+  resolution_note text
+  resolved_by varchar(26) [ref: > users.id]
+  resolved_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (status, id) [name: 'word_reports_status_id_idx']
+    word_id [name: 'word_reports_word_id_idx']
+    (word_id, user_id) [unique, name: 'word_reports_open_user_word_idx', note: 'partial: ${t.status} = 'open' AND ${t.imageId} IS NULL']
+    (word_id, user_id, image_id) [unique, name: 'word_reports_open_user_word_image_idx', note: 'partial: ${t.status} = 'open' AND ${t.imageId} IS NOT NULL']
+  }
+}
+
+Table word_card_shares {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  word_id varchar(26) [not null, ref: > words.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (created_at, id) [name: 'word_card_shares_created_idx']
+    (user_id, word_id, created_at) [name: 'word_card_shares_user_word_idx']
+  }
+
+  Note: 'Share kartu sukses dari app (feed card_share). Dedupe 24 jam per user+kata di repo.'
+}
+
+
+Table bug_reports {
+  id varchar(26) [pk]
+  user_id varchar(26) [ref: > users.id]
+  device_id text
+  description text [not null]
+  images json [not null]
+  app_version text
+  platform text
+  status text [not null, default: 'open']
+  resolution_note text
+  resolved_by varchar(26) [ref: > users.id]
+  resolved_at timestamp
+  created_by varchar(26) [ref: > users.id]
+  updated_by varchar(26) [ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    (status, id) [name: 'bug_reports_status_id_idx']
+    user_id [name: 'bug_reports_user_id_idx']
+    device_id [name: 'bug_reports_device_id_idx']
+  }
+}
+
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+Table device_tokens {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  udid text [not null]
+  fcm_token text [not null]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+
+  Indexes {
+    udid [unique, name: 'device_tokens_udid_unique']
+    fcm_token [unique, name: 'device_tokens_active_fcm_token_idx', note: 'partial: deleted_at is null']
+    user_id [name: 'device_tokens_active_user_id_idx', note: 'partial: deleted_at is null']
+  }
+}
+
+
+Table notifications {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  type text [not null]
+  title text [not null]
+  body text [not null]
+  image_url text [note: 'Opsional - thumbnail / rich push campaign']
+  target_kind text [not null]
+  target_id varchar(26) [not null]
+  action_kind text [note: 'CTA tap: word|contribution|suggestion|discussion|url']
+  action_value text [note: 'ULID atau URL https']
+  read_at timestamp
+  created_at timestamp [not null]
+
+  Indexes {
+    (user_id, type, target_kind, target_id) [unique, name: 'notifications_user_type_target_unique']
+    (user_id, id) [name: 'notifications_user_id_id_idx']
+    user_id [name: 'notifications_user_unread_idx', note: 'partial: read_at is null']
+  }
+}
+
+
+Table notification_templates {
+  id varchar(26) [pk]
+  name text [not null]
+  title text [not null]
+  body text [not null]
+  image_url text [note: 'Opsional - URL gambar campaign']
+  deep_link_kind text [not null, default: 'none']
+  deep_link_value text
+  created_by varchar(26) [not null, ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+  deleted_at timestamp
+
+  Indexes {
+    created_at [name: 'notification_templates_active_created_at_idx', note: 'partial: deleted_at is null']
+  }
+}
+
+
+Table notification_campaigns {
+  id varchar(26) [pk]
+  template_id varchar(26) [ref: > notification_templates.id]
+  title text [not null]
+  body text [not null]
+  image_url text [note: 'Snapshot URL gambar campaign']
+  deep_link_kind text [not null, default: 'none']
+  deep_link_value text
+  audience_type text [not null]
+  status text [not null, default: 'draft']
+  send_at timestamp
+  targeted_users integer [not null, default: 0]
+  push_success integer [not null, default: 0]
+  push_failed integer [not null, default: 0]
+  inbox_written integer [not null, default: 0]
+  inbox_cursor text
+  topic_sent boolean [not null, default: false]
+  last_error text
+  created_by varchar(26) [not null, ref: > users.id]
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (status, send_at) [name: 'notification_campaigns_status_send_at_idx']
+    created_at [name: 'notification_campaigns_created_at_idx']
+  }
+}
+
+
+Table notification_campaign_recipients {
+  id varchar(26) [pk]
+  campaign_id varchar(26) [not null, ref: > notification_campaigns.id]
+  user_id varchar(26) [not null, ref: > users.id]
+  status text [not null, default: 'pending']
+  error text
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (campaign_id, user_id, ) [unique, name: 'notification_campaign_recipients_campaign_user_unique']
+    (campaign_id, status) [name: 'notification_campaign_recipients_pending_idx']
+  }
+}
+
+
+Table notification_push_cooldowns {
+  user_id varchar(26) [not null, ref: > users.id]
+  channel text [not null]
+  last_push_at timestamp [not null]
+
+  Indexes {
+    (user_id, channel) [pk]
+  }
+}
+
+
+// ============================================================
+// TRANSLATION HELP
+// ============================================================
+
+Table discussions {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  body text
+  link_url text
+  images json [not null]
+  audio_url text
+  audio_mime_type text
+  audio_file_size integer
+  audio_duration_ms integer
+  audio_provider text
+  audio_provider_file_id text
+  audio_sha text
+  status text [not null, default: 'pending_review']
+  rejection_note text
+  reviewed_by varchar(26) [ref: > users.id]
+  reviewed_at timestamp
+  pinned_reply_id text
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (status, id) [name: 'discussions_status_id_idx']
+    (user_id, id) [name: 'discussions_user_id_idx']
+  }
+}
+
+
+Table discussion_replies {
+  id varchar(26) [pk]
+  discussion_id varchar(26) [not null, ref: > discussions.id]
+  user_id varchar(26) [not null, ref: > users.id]
+  body text [not null]
+  body_original text
+  audio_url text
+  audio_mime_type text
+  audio_file_size integer
+  audio_duration_ms integer
+  audio_provider text
+  audio_provider_file_id text
+  audio_sha text
+  status text [not null, default: 'published']
+  reviewed_by varchar(26) [ref: > users.id]
+  reviewed_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    (discussion_id, created_at, id) [name: 'discussion_replies_discussion_created_idx']
+    (status, id) [name: 'discussion_replies_status_idx']
+  }
+}
+
+
+Table verifier_applications {
+  id varchar(26) [pk]
+  user_id varchar(26) [not null, ref: > users.id]
+  phone text [not null]
+  address text [not null]
+  social_links json [not null]
+  status text [not null, default: 'pending']
+  admin_comment text
+  reviewed_by varchar(26) [ref: > users.id]
+  reviewed_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp
+
+  Indexes {
+    user_id [unique, name: 'verifier_applications_user_id_unique']
+    (status, id) [name: 'verifier_applications_status_id_idx']
+  }
+}
+
+
+
+// Keep-alive Supabase - ditulis workflow Supabase Keep-Alive (repo api) via DATABASE_URL.
+// Tanpa FK ke users (CI berjalan sebagai user sistem GitHub Actions).
+Table supabase_health_checks {
+  id varchar(26) [pk]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+  project_label text [not null, note: 'sambasku-staging | sambasku-prod']
+  project_ref text [not null, note: 'ref 22 char dari subdomain .supabase.co']
+  env text [not null, default: 'staging', note: 'staging | production']
+  http_status integer
+  status text [not null, note: 'ok | failed']
+  time_start timestamp
+  time_end timestamp
+  duration_ms integer
+  github_run_id text
+  github_run_url text
+  error_message text
+
+  Indexes {
+    (env, created_at) [name: 'supabase_health_checks_env_created_idx']
+  }
+}
+
+// WhatsApp (Kapso): template per event, log kirim generik, quota per provider.
+Table wa_message_templates {
+  id varchar(26) [pk]
+  event_key text [not null, note: 'verifier_application_approved | verifier_application_rejected | ...']
+  enabled integer [not null, default: '0']
+  meta_template_name text [not null, note: 'nama template approved di Meta WABA']
+  meta_template_language text [not null, default: 'id']
+  body text [not null, note: 'teks dengan placeholder {{param}}']
+  params json [not null, note: '[{name, description}] - urutan = urutan positional Meta']
+  updated_at timestamp
+  updated_by varchar(26) [ref: > users.id]
+
+  Indexes {
+    event_key [unique, name: 'wa_message_templates_event_key_unique']
+  }
+}
+
+Table wa_message_logs {
+  id varchar(26) [pk]
+  provider text [not null, note: 'kapso | provider lain']
+  event_key text [not null]
+  to_phone text [not null]
+  template_name text
+  channel text [not null, note: 'template | text']
+  status text [not null, note: 'sent | failed']
+  error_message text
+  created_at timestamp [not null]
+
+  Indexes {
+    created_at [name: 'wa_message_logs_created_at_idx']
+  }
+}
+
+Table wa_usage {
+  provider text [pk]
+  used_count integer [not null, default: '0']
+  limit_count integer [not null, default: '2000', note: 'free tier Kapso 2000/bulan']
+  warn_threshold_percent integer [not null, default: '80']
+  period_start timestamp [not null, note: 'awal periode kuota - reset tanggal 1 00:00:01 WIB (cron + lazy)']
+  updated_at timestamp
+  updated_by varchar(26) [ref: > users.id]
+}

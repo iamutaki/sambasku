@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "NOTIFICATION_NOT_FOUND",
+  "message": "Notifikasi dengan id tersebut tidak ditemukan",
+  "details": null
+}

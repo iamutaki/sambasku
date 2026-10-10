@@ -1,0 +1,40 @@
+---
+description: Selalu pakai context-mode MCP untuk eksplorasi kode, pencarian, dan fetch dokumen
+alwaysApply: true
+---
+
+# Selalu gunakan context-mode
+
+Sebelum pakai tool konteks-heavy (Read file besar, Grep, Glob, WebFetch), cek dulu
+apakah context-mode MCP bisa mengerjakannya dengan lebih hemat.
+
+## Kapan pakai context-mode
+
+| Kebutuhan | Tool |
+|-----------|------|
+| Jalankan command / script dengan output besar | `ctx_execute` |
+| Cari kode / jawaban di codebase | `ctx_search` |
+| Fetch + index halaman docs eksternal | `ctx_fetch_and_index` |
+| Index direktori untuk query berikutnya | `ctx_index` |
+| Query cepat tanpa baca file penuh | `ctx_insight` |
+
+## Kapan boleh langsung Read/Grep
+
+1. Sudah tahu file + baris persis yang perlu diedit.
+2. Output kecil (file pendek, hasil grep < 50 baris).
+3. Context-mode tidak punya tool yang cocok.
+
+## Contoh
+
+```text
+❌ BAD: Read tool ke file 900 baris cuma buat cari satu fungsi
+✅ GOOD: ctx_search "fungsi validateWilayah di explore feature"
+
+❌ BAD: WebFetch docs panjang langsung ke context
+✅ GOOD: ctx_fetch_and_index url, lalu ctx_search
+```
+
+## Cek hasil
+
+Setelah sesi berat, jalankan `ctx_stats` untuk lihat penghematan.
+Target: reduksi konteks > 50% di sesi eksplorasi.

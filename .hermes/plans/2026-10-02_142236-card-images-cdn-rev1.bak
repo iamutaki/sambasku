@@ -1,0 +1,322 @@
+# Plan: card_images.json sebagai Config Dinamis Background Card (CDN jsDelivr)
+
+## Goal
+
+Background card WOTD (dan card lain nanti) diambil dari config JSON yang di-host di repo `data` via jsDelivr, jadi asset bisa diganti tanpa release APK dan tanpa menyentuh worker/API.
+
+## Current Context / Assumptions
+
+- Repo `data` (`git@github.com:sambasku/data.git`, branch `main`) sudah ada di workspace `sambasku/data/`. Isi `home/`:
+  - `card_images.json` — file KOSONG (0 byte, baru dibuat user).
+  - `wotd_cover.webp` — 600×338, 37 KB (sudah dioptimasi, sama dengan asset mobile).
+  - Keduanya **belum di-commit** (`git -C data status` → `?? home/`).
+- jsDelivr belum bisa melayani (belum di-push): `curl -sI https://cdn.jsdelivr.net/gh/sambasku/data@main/home/card_images.json` → 404. Setelah push → 200.
+- Mobile (`sambasku/mobile`, branch `fix/tab-freeze`):
+  - Card WOTD: `lib/features/dictionary/presentation/widgets/word_of_day_card.dart` — background pakai `AssetImage('assets/images/wotd_cover.webp')` di 2 tempat (body line ~65, skeleton line ~285).
+  - `lib/core/utils/display_image_url.dart` — helper existing: URL jsDelivr dibungkus wsrv.nl untuk resize. **Tidak dipakai di plan ini** (asset sudah 600px, card kecil; langsung jsDelivr).
+  - `lib/core/cache/cached_json_client.dart` + `cache_providers.dart` — cache-aside SWR L1 disk (budget 40 MB), TTL per `CacheClass` di `lib/core/cache/cache_policy.dart`. Pola pemakaian ada di `contribute_page.dart:1540-1557` (`CacheClass.referenceStatic`, TTL 24 jam).
+  - `lib/shared/widgets/cached_network_image_with_fallback.dart` — widget network image dengan fallback (dipakai luas, mis. `vote_deck_word_card.dart:138`).
+  - `dioProvider` — Dio dengan interceptor auth/device-id/network-monitor. Request **absolute URL** lolos tanpa rewrite host → aman untuk jsDelivr (traffic TIDAK lewat worker sambasku).
+- Constraint user: (1) ganti asset tanpa release APK, (2) tidak pakai traffic worker, (3) repo `data` jadi CDN via jsDelivr.
+
+## Architecture / Proposed Approach
+
+`data/home/card_images.json` berisi map config card (key → imageUrl + alignment, absolute URL). Mobile punya satu provider `cardImagesProvider` yang fetch JSON itu langsung dari `cdn.jsdelivr.net` memakai `CachedJsonClient` (cache L1 + SWR, soft-fail → null), lalu widget WOTD memakai `CachedNetworkImageWithFallback` dengan fallback asset bundled `assets/images/wotd_cover.webp` (tetap dipertahankan untuk offline/gagal). Cache-busting gambar lewat query `?v=` di dalam JSON, jadi satu edit JSON mengganti gambar tanpa sentuh app.
+
+## Schema JSON (final)
+
+```json
+{
+  "version": 1,
+  "cards": {
+    "wotd": {
+      "imageUrl": "https://cdn.jsdelivr.net/gh/sambasku/data@main/home/wotd_cover.webp",
+      "alignment": "bottomCenter"
+    }
+  }
+}
+```
+
+- `imageUrl` absolute — app tidak membangun URL, boleh menunjuk host lain (ImageKit dll) tanpa ubah app.
+- `alignment` salah satu: `topLeft, topCenter, topRight, centerLeft, center, centerRight, bottomLeft, bottomCenter, bottomRight`. Tidak valid/absen → `bottomCenter` (default sekarang).
+- Card baru (mis. banner diskusi) = tambah key di `cards`, zero code change untuk data, app opt-in per key.
+
+## Step-by-step Tasks
+
+### Task 1 — Isi + commit + push repo `data`
+
+1. Tulis `sambasku/data/home/card_images.json` dengan isi schema di atas.
+2. Commit + push:
+   ```bash
+   cd /Users/ibnulmutaki/Development/github/sambasku/data
+   git add home/card_images.json home/wotd_cover.webp
+   git commit -m "feat: card_images config + wotd cover for jsDelivr CDN"
+   git push origin main
+   ```
+3. Verifikasi (butuh 1-2 menit setelah push pertama untuk sinkronisasi jsDelivr):
+   ```bash
+   curl -sI 'https://cdn.jsdelivr.net/gh/sambasku/data@main/home/card_images.json' | head -3
+   # expect: HTTP/2 200 ... content-type: application/json
+   curl -sI 'https://cdn.jsdelivr.net/gh/sambasku/data@main/home/wotd_cover.webp' | head -3
+   # expect: HTTP/2 200 ... content-type: image/webp
+   ```
+
+### Task 2 — DTO + parser (mobile, TDD)
+
+File baru: `mobile/lib/features/dictionary/data/card_images_config.dart`
+
+```dart
+/// Config background card dari CDN (repo `data` via jsDelivr).
+/// Soft-fail: JSON kosong/rusak → null → app pakai asset bundled.
+class CardImagesConfig {
+  const CardImagesConfig({required this.cards});
+
+  /// key card (mis. 'wotd') → config-nya.
+  final Map<String, CardImageEntry> cards;
+
+  static CardImagesConfig? tryParse(Object? json) {
+    if (json is! Map) return null;
+    final rawCards = json['cards'];
+    if (rawCards is! Map) return null;
+    final parsed = <String, CardImageEntry>{};
+    rawCards.forEach((key, value) {
+      final entry = CardImageEntry.tryParse(value);
+      if (entry != null && key is String) parsed[key] = entry;
+    });
+    if (parsed.isEmpty) return null;
+    return CardImagesConfig(cards: parsed);
+  }
+
+  CardImageEntry? entryOf(String key) => cards[key];
+}
+
+class CardImageEntry {
+  const CardImageEntry({required this.imageUrl, this.alignment = 'bottomCenter'});
+
+  final String imageUrl;
+  final String alignment;
+
+  static const _allowedAlignments = {
+    'topLeft', 'topCenter', 'topRight',
+    'centerLeft', 'center', 'centerRight',
+    'bottomLeft', 'bottomCenter', 'bottomRight',
+  };
+
+  static CardImageEntry? tryParse(Object? json) {
+    if (json is! Map) return null;
+    final url = json['imageUrl'];
+    if (url is! String || !url.startsWith('https://')) return null;
+    final align = json['alignment'];
+    return CardImageEntry(
+      imageUrl: url,
+      alignment: align is String && _allowedAlignments.contains(align)
+          ? align
+          : 'bottomCenter',
+    );
+  }
+
+  Alignment get alignmentValue => switch (alignment) {
+        'topLeft' => Alignment.topLeft,
+        'topCenter' => Alignment.topCenter,
+        'topRight' => Alignment.topRight,
+        'centerLeft' => Alignment.centerLeft,
+        'center' => Alignment.center,
+        'centerRight' => Alignment.centerRight,
+        'bottomLeft' => Alignment.bottomLeft,
+        'bottomRight' => Alignment.bottomRight,
+        _ => Alignment.bottomCenter,
+      };
+}
+```
+
+Test baru: `mobile/test/features/dictionary/card_images_config_test.dart` (tulis DULU, run FAIL karena file belum ada — lalu buat file di atas, run PASS):
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sambasku/features/dictionary/data/card_images_config.dart';
+
+void main() {
+  group('CardImagesConfig.tryParse', () {
+    test('null/rusak/kosong → null', () {
+      expect(CardImagesConfig.tryParse(null), isNull);
+      expect(CardImagesConfig.tryParse('bukan-map'), isNull);
+      expect(CardImagesConfig.tryParse({'cards': {}}), isNull);
+    });
+
+    test('entry valid ter-parse, alignment valid dipertahankan', () {
+      final cfg = CardImagesConfig.tryParse({
+        'version': 1,
+        'cards': {
+          'wotd': {
+            'imageUrl': 'https://cdn.jsdelivr.net/gh/x@main/a.webp',
+            'alignment': 'topCenter',
+          },
+        },
+      });
+      expect(cfg, isNotNull);
+      expect(cfg!.entryOf('wotd')!.imageUrl, 'https://cdn.jsdelivr.net/gh/x@main/a.webp');
+      expect(cfg.entryOf('wotd')!.alignmentValue, Alignment.topCenter);
+    });
+
+    test('imageUrl non-https / absen → entry dibuang', () {
+      final cfg = CardImagesConfig.tryParse({
+        'cards': {
+          'wotd': {'imageUrl': 'http://insecure/x.webp'},
+          'banner': {'imageUrl': 123},
+        },
+      });
+      expect(cfg, isNull); // semua entry invalid → config null
+    });
+
+    test('alignment aneh → fallback bottomCenter', () {
+      final cfg = CardImagesConfig.tryParse({
+        'cards': {
+          'wotd': {
+            'imageUrl': 'https://x/y.webp',
+            'alignment': 'kena-angin',
+          },
+        },
+      });
+      expect(cfg!.entryOf('wotd')!.alignmentValue, Alignment.bottomCenter);
+    });
+  });
+}
+```
+
+Verifikasi:
+```bash
+cd /Users/ibnulmutaki/Development/github/sambasku/mobile
+flutter test test/features/dictionary/card_images_config_test.dart
+# expect: All tests passed! (4 test)
+```
+
+Commit: `feat(dictionary): card images config dto + parser`
+
+### Task 3 — Provider fetch dari jsDelivr (mobile, TDD)
+
+File baru: `mobile/lib/features/dictionary/presentation/providers/card_images_providers.dart`
+
+```dart
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../core/cache/cache_key.dart';
+import '../../../../core/cache/cache_policy.dart';
+import '../../../../core/cache/cache_providers.dart';
+import '../../../../core/network/network_providers.dart';
+import '../../data/card_images_config.dart';
+
+part 'card_images_providers.g.dart';
+
+/// URL JSON config card di repo `data` via jsDelivr.
+/// LANGSUNG ke CDN, tidak lewat worker/API.
+const _cardImagesJsonUrl =
+    'https://cdn.jsdelivr.net/gh/sambasku/data@main/home/card_images.json';
+
+/// Config card dari CDN. Null = fetch gagal / belum ada cache → pakai asset.
+/// CacheClass.referenceStatic (24 jam fresh + SWR) — perubahan JSON
+/// terlihat paling lambat ±24 jam, tanpa traffic worker.
+@riverpod
+Future<CardImagesConfig?> cardImages(Ref ref) async {
+  final cache = ref.watch(cachedJsonClientProvider);
+  final dio = ref.watch(dioProvider);
+  final key = buildCacheKey(method: 'GET', path: '/cdn/home/card_images.json');
+
+  try {
+    final data = await cache.getOrFetch(
+      key: key,
+      cacheClass: CacheClass.referenceStatic,
+      fetch: () async {
+        final resp = await dio.get<dynamic>(
+          _cardImagesJsonUrl,
+          options: Options(receiveTimeout: const Duration(seconds: 5)),
+        );
+        final body = resp.data;
+        if (body is! Map) throw StateError('Envelope card_images tidak valid');
+        return Map<String, dynamic>.from(body);
+      },
+    );
+    return CardImagesConfig.tryParse(data);
+  } catch (_) {
+    return null; // soft-fail: offline / CDN down → asset bundled
+  }
+}
+```
+
+Catatan:
+- `Options` perlu `import 'package:dio/dio.dart';` — tambahkan di import.
+- `Ref` dari riverpod; run `dart run build_runner build -d` untuk generate `.g.dart`.
+- Key `/cdn/home/card_images.json` pseudo-path L1 (bukan path API) — hanya namespace cache, kontrak `buildCacheKey` tidak membedakan.
+
+Test: satu test apapun provider ini butuh mock Dio + cache store; mahal untuk nilai kecil. **Skip unit test provider** — perilaku inti (parsing) sudah ke-test di Task 2; perilaku network di-integrasikan uji manual Task 4. (Ponytail: kalau nanti config ini krusial, tambah test dengan `MockDio` + `ResponseCacheStore` in-memory.)
+
+Commit: `feat(dictionary): card images provider fetch dari jsDelivr (soft-fail)`
+
+### Task 4 — Widget WOTD pakai config (mobile)
+
+Edit `mobile/lib/features/dictionary/presentation/widgets/word_of_day_card.dart`:
+
+1. `_WordOfDayBody` jadi `ConsumerWidget` (sudah), watch config:
+   ```dart
+   final config = ref.watch(cardImagesProvider).valueOrNull;
+   final wotdImage = config?.entryOf('wotd');
+   final alignment = wotdImage?.alignmentValue ?? Alignment.bottomCenter;
+   ```
+2. Ganti layer background (Stack children pertama) dari `DecoratedBox+DecorationImage` menjadi:
+   ```dart
+   Positioned.fill(
+     child: wotdImage == null
+         ? Image.asset(
+             'assets/images/wotd_cover.webp',
+             fit: BoxFit.cover,
+             alignment: alignment,
+           )
+         : Image.network(
+             wotdImage.imageUrl,
+             fit: BoxFit.cover,
+             alignment: alignment,
+             errorBuilder: (_, _, _) => Image.asset(
+               'assets/images/wotd_cover.webp',
+               fit: BoxFit.cover,
+               alignment: alignment,
+             ),
+           ),
+   ),
+   ```
+   (`Image.network` disk-cache otomatis via Flutter image cache; `cached_network_image` tidak wajib untuk 1 gambar kecil — ponytail: ganti ke `CachedNetworkImageWithFallback` kalau butuh persist antar sesi.)
+3. Skeleton TIDAK berubah (tetap asset bundled — loading state, tidak boleh nunggu network).
+4. Overlay gradient + teks: tidak berubah.
+
+Verifikasi:
+```bash
+cd /Users/ibnulmutaki/Development/github/sambasku/mobile
+flutter analyze --no-pub 2>&1 | grep word_of_day   # expect: (kosong)
+flutter test test/features/dictionary/ 2>&1 | tail -1
+# expect: All tests passed!
+```
+
+Uji manual (butuh device/emulator + JSON sudah ter-push):
+1. Run app → card WOTD tampil dengan gambar CDN (sama visualnya dengan bundled).
+2. Airplane mode ON, restart app dengan cache bersih (`flutter clean && flutter run`) → card tampil dengan asset bundled (soft-fail jalan).
+3. Edit JSON di repo `data` (mis. ganti `alignment: 'topCenter'`), commit+push, tunggu lewat window fresh cache / clear app data → orientasi gambar berubah tanpa update app.
+
+Commit: `feat(dictionary): wotd card background dari CDN config (fallback asset)`
+
+### Task 5 — (Opsional, tunda) Control panel edit JSON
+
+YAGNI sekarang. Edit JSON cukup via commit git biasa di repo `data`. Kalau butuh tanpa git, barulah pikirkan admin UI / GitHub Action form. Tidak dikerjakan di plan ini.
+
+## Tests / Validation Summary
+
+- Task 2: unit test parser (4 case: rusak → null, valid, non-https dibuang, alignment fallback). TDD: test dulu FAIL, implementasi, PASS.
+- Task 3: tanpa unit test (soft-fail trivial, network ter-verify manual). 
+- Task 4: `flutter analyze` bersih + `flutter test test/features/dictionary/` pass + 3 langkah manual di atas.
+- Full suite sebelum commit terakhir: `flutter test` → semua pass (baseline sekarang 396+).
+
+## Risks / Tradeoffs / Open Questions
+
+1. **Latensi update**: `CacheClass.referenceStatic` = JSON fresh 24 jam; jsDelivr edge cache `@main` ±12 jam. Perubahan asset terlihat user paling lambat ~24 jam. Kalau mau lebih cepat: ganti `CacheClass.referenceStatic` → `CacheClass.wordOfDay` (fresh sampai tengah malam, cap 1 jam) — perubahan satu enum, sudah disediakan. Default plan: referenceStatic (hemat, config jarang berubah).
+2. **Cache-busting gambar**: jsDelivr + Flutter image cache bisa membuat gambar lama menempel meski JSON sudah baru. Solusi yang dipakai: saat ganti gambar, GANTI NAMA file (mis. `wotd_cover_2026-10.webp`) dan update `imageUrl` di JSON — URL baru = cache miss otomatis. Tanpa perlu `?v=` manual.
+3. **First-run tanpa internet**: config null → asset bundled. Pengalaman tidak pernah kosong.
+4. **Dio interceptor** (auth/device-id) menempel header ke request jsDelivr — harmless (jsDelivr abaikan), tetap satu koneksi langsung ke CDN, tidak lewat worker. Kalau mau benar-benar bersih, buat `Dio` telanjang di provider — 1 baris tambahan, tidak dilakukan (YAGNI).
+5. **jsDelivr rate limit**: publik CDN, tanpa auth; 1 fetch JSON/hari/install + gambar ter-disk-cache → jauh di bawah batas.
+6. **Open question**: repo `data` public? jsDelivr gh hanya melayani repo PUBLIC. Jika repo private, semua ini gagal (404) — Task 1 step 3 otomatis membuktikan ini; kalau 404 permanen, repo harus dibuat public (atau pindah ke GitHub Pages/raw lain) SEBELUM Task 3.

@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SambasKu Mobile - Prototipe Statis (docs/UI.md)</title>
+<style>
+  /* == Zinc palette, Forui-like == */
+  :root{
+    --bg:#fafafa; --surface:#ffffff; --surface2:#f4f4f5;
+    --border:#e4e4e7; --border2:#d4d4d8;
+    --fg:#18181b; --fg2:#52525b; --fg3:#a1a1aa;
+    --accent:#18181b; --accent-fg:#fafafa;
+    --success:#16a34a; --success-bg:#f0fdf4; --success-fg:#15803d;
+    --warning:#d97706; --warning-bg:#fffbeb; --warning-fg:#b45309;
+    --danger:#dc2626; --danger-bg:#fef2f2;
+    --skeleton:#e4e4e7;
+  }
+  .screen.dark{
+    --bg:#09090b; --surface:#18181b; --surface2:#27272a;
+    --border:#27272a; --border2:#3f3f46;
+    --fg:#fafafa; --fg2:#a1a1aa; --fg3:#52525b;
+    --accent:#fafafa; --accent-fg:#18181b;
+    --success-bg:#052e16; --success-fg:#4ade80;
+    --warning-bg:#451a03; --warning-fg:#fbbf24;
+    --danger-bg:#450a0a;
+    --skeleton:#27272a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{
+    background:#f4f4f5; color:#18181b;
+    font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
+    padding:32px 24px 64px;
+  }
+  .board-head{max-width:1480px;margin:0 auto 28px}
+  .board-head h1{font-size:20px;font-weight:700;letter-spacing:-.02em}
+  .board-head p{font-size:13px;color:#52525b;margin-top:4px}
+  .board-head code{font-size:12px;background:#e4e4e7;padding:2px 6px;border-radius:4px}
+  .board{display:flex;flex-wrap:wrap;gap:36px;justify-content:center;max-width:1560px;margin:0 auto}
+
+  /* == Phone frame == */
+  .unit{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .unit figcaption{font-size:12px;color:#52525b;font-weight:600}
+  .unit figcaption span{color:#a1a1aa;font-weight:400}
+  .phone{
+    width:390px;height:812px;background:#09090b;border-radius:48px;padding:10px;
+    box-shadow:0 24px 48px -12px rgba(0,0,0,.25), 0 0 0 1px #27272a;
+    flex-shrink:0;
+  }
+  .screen{
+    width:100%;height:100%;border-radius:38px;overflow:hidden;background:var(--bg);
+    display:flex;flex-direction:column;position:relative;color:var(--fg);
+  }
+  .statusbar{
+    height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 26px 0;font-size:14px;font-weight:600;
+  }
+  .island{
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    width:118px;height:32px;background:#09090b;border-radius:20px;z-index:50;
+  }
+  .scroll{flex:1;overflow-y:auto;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+
+  /* == FHeader == */
+  .fheader{
+    display:flex;align-items:center;gap:8px;padding:6px 16px;min-height:48px;flex-shrink:0;
+  }
+  .fheader .htitle{font-size:20px;font-weight:700;letter-spacing:-.02em;flex:1}
+  .fheader.sub .htitle{font-size:17px}
+  .iconbtn{
+    width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    color:var(--fg);flex-shrink:0;border:none;background:transparent;cursor:pointer;
+  }
+  .iconbtn:active{background:var(--surface2)}
+
+  /* == Body == */
+  .body{padding:0 16px;display:flex;flex-direction:column;gap:14px}
+  .sect{display:flex;flex-direction:column;gap:8px}
+  .sect-h{display:flex;align-items:baseline;justify-content:space-between}
+  .sect-h b{font-size:14px;font-weight:700;letter-spacing:-.01em}
+  .sect-h a{font-size:12px;color:var(--fg2);text-decoration:none;font-weight:500}
+
+  .searchbar{
+    display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:10px;
+    padding:0 12px;height:38px;color:var(--fg3);font-size:14px;
+  }
+
+  /* Kata hari ini */
+  .today{
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .today .lbl{font-size:11px;font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:.06em}
+  .lemma-row{display:flex;align-items:center;gap:10px}
+  .lemma{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .gloss{font-size:14px;color:var(--fg2);line-height:1.45}
+  .meta-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+  .badge{
+    font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:4px;line-height:1.5;white-space:nowrap;
+  }
+  .badge.ok{background:var(--success-bg);color:var(--success-fg)}
+  .badge.warn{background:var(--warning-bg);color:var(--warning-fg)}
+  .badge .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+  .chip{
+    font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px;
+    border:1px solid var(--border2);color:var(--fg2);background:var(--surface);
+    white-space:nowrap;cursor:pointer;
+  }
+  .chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+  .chip.sel{border-color:var(--fg);color:var(--fg)}
+
+  /* Compact list / FTile */
+  .tgroup{
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  }
+  .tile{
+    display:flex;align-items:center;gap:12px;padding:10px 12px;min-height:52px;
+  }
+  .tile + .tile{border-top:1px solid var(--border)}
+  .tile .tmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .tile .tt{font-size:15px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
+  .tile .ts{font-size:12.5px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile .sfx{color:var(--fg3);flex-shrink:0;display:flex;align-items:center;gap:10px}
+  .tile .lead{color:var(--fg2);flex-shrink:0}
+  .count{font-size:12px;color:var(--fg3);font-weight:500}
+
+  /* Bottom nav */
+  .bnav{
+    flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);
+    display:flex;padding:6px 8px 22px;
+  }
+  .bnav a{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    text-decoration:none;color:var(--fg3);font-size:10px;font-weight:600;padding-top:6px;
+  }
+  .bnav a.on{color:var(--fg)}
+
+  /* Detail */
+  .detail-top{padding:4px 16px 0;display:flex;flex-direction:column;gap:8px}
+  .note{
+    font-size:12.5px;color:var(--warning-fg);background:var(--warning-bg);
+    border-radius:10px;padding:10px 12px;line-height:1.5;
+  }
+  .block{display:flex;flex-direction:column;gap:6px}
+  .block .bh{font-size:12px;font-weight:700;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em}
+  .block .bd{font-size:15px;line-height:1.55}
+  .example{
+    background:var(--surface2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;
+  }
+  .example .sbs{font-size:14.5px;font-weight:600;line-height:1.5}
+  .example .id{font-size:13px;color:var(--fg2);line-height:1.5}
+  .audio-row{
+    display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:8px 12px;font-size:13px;color:var(--fg2);
+  }
+
+  /* Form */
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:13px;font-weight:600}
+  .field input,.field textarea{
+    background:var(--surface);border:1px solid var(--border2);border-radius:10px;
+    padding:10px 12px;font-size:14px;font-family:inherit;color:var(--fg);outline:none;
+  }
+  .field input::placeholder,.field textarea::placeholder{color:var(--fg3)}
+  .field input:focus,.field textarea:focus{border-color:var(--fg2)}
+  .field.err input{border-color:var(--danger)}
+  .field .msg{font-size:11.5px;color:var(--danger)}
+  .field .hint{font-size:11.5px;color:var(--fg3)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .thumbs{display:flex;gap:8px}
+  .thumb{
+    width:64px;height:64px;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--fg3);
+    font-size:10px;flex-direction:column;gap:2px;
+  }
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;height:46px;border-radius:12px;
+    font-size:15px;font-weight:600;border:none;cursor:pointer;width:100%;
+  }
+  .btn.primary{background:var(--accent);color:var(--accent-fg)}
+  .btn.ghost{background:var(--surface2);color:var(--fg)}
+
+  /* Skeleton */
+  .sk{background:var(--skeleton);border-radius:8px;animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+  /* misc */
+  .intro{font-size:13.5px;color:var(--fg2);line-height:1.5;padding:0 2px}
+  .stat-line{
+    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--fg2);
+    background:var(--surface2);border-radius:10px;padding:10px 12px;line-height:1.45;
+  }
+  .identity{display:flex;align-items:center;gap:12px;padding:2px 2px 0}
+  .avatar{
+    width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-fg);
+    display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700;flex-shrink:0;
+  }
+  .idmain{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .idmain .n{font-size:16px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .idmain .u{font-size:12.5px;color:var(--fg3)}
+  .role{
+    font-size:10.5px;font-weight:600;color:var(--fg2);border:1px solid var(--border2);
+    padding:1px 8px;border-radius:999px;white-space:nowrap;
+  }
+  .guestbox{
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:14px;display:flex;flex-direction:column;gap:10px;
+  }
+  .guestbox p{font-size:13.5px;color:var(--fg2);line-height:1.5}
+</style>
+</head>
+<body>
+
+<header class="board-head">
+  <h1>SambasKu Mobile - Prototipe statis</h1>
+  <p>Sumber spek: <code>docs/UI.md</code> - Forui-like, Zinc, list compact, 4 tab shell. Buka tiap frame lalu scroll isinya. Data kata dari csv repo.</p>
+</header>
+
+<!-- ================= ICONS (Lucide-style, inline sprite) ================= -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 14h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16"/><path d="m7 20 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/><path d="m2 15 6 6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></symbol>
+  <symbol id="i-palmtree" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8c0-3.5 2.5-6 6-6-1 2-1.5 3.5-1.5 5"/><path d="M13 8c0-2 0-6-4-6 0 2 .5 4 2 5.5"/><path d="M13 8c0-2.5-1.5-5-4.5-5C9 5 10 7 11.5 8"/><path d="M13 8c4.5 0 7 2.5 8 6-2.5-.5-4.5-1.5-6-3"/><path d="M13 8c-5 0-8.5 3-10 8 3-1 5.5-2.5 7-4.5"/><path d="M13 8v13"/></symbol>
+  <symbol id="i-utensils" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+  <symbol id="i-sprout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
+  <symbol id="i-listcheck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+  <symbol id="i-lang" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-imgplus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><path d="M16 5h6"/><path d="M19 2v6"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></symbol>
+  <symbol id="i-batt" viewBox="0 0 24 12"><rect x="1" y="1" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".4"/><rect x="2.5" y="2.5" width="14" height="7" rx="1.4" fill="currentColor"/><path d="M22 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".4"/></symbol>
+</svg>
+
+<main class="board">
+
+<!-- ============================================================ 1. HOME (guest, light) -->
+<figure class="unit">
+  <figcaption>Home <span>- tamu, loaded, Zinc light</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar">
+      <span>9:41</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+        <svg width="16" height="16"><use href="#i-wifi"/></svg>
+        <svg width="24" height="12"><use href="#i-batt"/></svg>
+      </span>
+    </div>
+    <div class="fheader">
+      <div class="htitle">SambasKu</div>
+      <button class="iconbtn"><svg width="20" height="20"><use href="#i-sun"/></svg></button>
+    </div>
+    <div class="scroll"><div class="body">
+      <div class="searchbar">
+        <svg width="16" height="16"><use href="#i-search"/></svg>
+        Cari kata Sambas atau Indonesia
+      </div>
+
+      <div class="today">
+        <span class="lbl">Kata hari ini</span>
+        <div class="lemma-row">
+          <span class="lemma">Layau</span>
+          <button class="iconbtn" style="margin-left:auto"><svg width="18" height="18"><use href="#i-play"/></svg></button>
+        </div>
+        <div class="gloss">galau; resah tidak menentu</div>
+        <div class="meta-row">
+          <span class="chip">kata sifat</span>
+          <span class="badge ok"><span class="dot"></span>Terverifikasi</span>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <div class="tile">
+          <span class="lead"><svg width="18" height="18"><use href="#i-book"/></svg></span>
+          <div class="tmain">
+            <span class="tt">Daftar kata A-Z</span>
+            <span class="ts">Semua kata dari A sampai Z</span>
+          </div>
+          <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Terbaru</b><a href="#">Lihat semua</a></div>
+        <div class="tgroup">
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Belungkin <span class="badge ok"><span class="dot"></span>Terverifikasi</span></span>
+              <span class="ts">Siput</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Sikkit <span class="badge ok"><span class="dot"></span>Terverifikasi</span></span>
+              <span class="ts">Sedikit</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Kabut <span class="badge ok"><span class="dot"></span>Terverifikasi</span></span>
+              <span class="ts">Awan rendah</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Kutis <span class="badge warn"><span class="dot"></span>Menunggu pengecekan</span></span>
+              <span class="ts">Ambil sedikit dengan ujung jari</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Ngolok <span class="badge warn"><span class="dot"></span>Menunggu pengecekan</span></span>
+              <span class="ts">Mengejek</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Bedakok <span class="badge ok"><span class="dot"></span>Terverifikasi</span></span>
+              <span class="ts">Berpelukan</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Tirau <span class="badge ok"><span class="dot"></span>Terverifikasi</span></span>
+              <span class="ts">Pantau</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <nav class="bnav">
+      <a class="on" href="#"><svg width="22" height="22"><use href="#i-house"/></svg>Home</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-compass"/></svg>Eksplorasi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-hand"/></svg>Kontribusi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Profil</a>
+    </nav>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 2. HOME (skeleton) -->
+<figure class="unit">
+  <figcaption>Home <span>- loading skeleton</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader">
+      <div class="htitle">SambasKu</div>
+      <button class="iconbtn"><svg width="20" height="20"><use href="#i-sun"/></svg></button>
+    </div>
+    <div class="scroll"><div class="body">
+      <div class="searchbar">
+        <svg width="16" height="16"><use href="#i-search"/></svg>
+        Cari kata Sambas atau Indonesia
+      </div>
+
+      <div class="today" aria-label="skeleton kata hari ini">
+        <span class="sk" style="width:76px;height:11px"></span>
+        <div class="lemma-row"><span class="sk" style="width:130px;height:28px;border-radius:8px"></span></div>
+        <span class="sk" style="width:65%;height:14px"></span>
+        <div class="meta-row">
+          <span class="sk" style="width:72px;height:22px;border-radius:999px"></span>
+          <span class="sk" style="width:96px;height:22px;border-radius:999px"></span>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <div class="tile">
+          <span class="lead"><svg width="18" height="18"><use href="#i-book"/></svg></span>
+          <div class="tmain">
+            <span class="tt">Daftar kata A-Z</span>
+            <span class="ts">Semua kata dari A sampai Z</span>
+          </div>
+          <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Terbaru</b></div>
+        <div class="tgroup">
+          <div class="tile"><div class="tmain"><span class="sk" style="width:110px;height:15px;display:block"></span><span class="sk" style="width:70%;height:12px;display:block;margin-top:4px"></span></div></div>
+          <div class="tile"><div class="tmain"><span class="sk" style="width:88px;height:15px;display:block"></span><span class="sk" style="width:55%;height:12px;display:block;margin-top:4px"></span></div></div>
+          <div class="tile"><div class="tmain"><span class="sk" style="width:132px;height:15px;display:block"></span><span class="sk" style="width:48%;height:12px;display:block;margin-top:4px"></span></div></div>
+          <div class="tile"><div class="tmain"><span class="sk" style="width:100px;height:15px;display:block"></span><span class="sk" style="width:62%;height:12px;display:block;margin-top:4px"></span></div></div>
+          <div class="tile"><div class="tmain"><span class="sk" style="width:120px;height:15px;display:block"></span><span class="sk" style="width:66%;height:12px;display:block;margin-top:4px"></span></div></div>
+        </div>
+      </div>
+    </div></div>
+
+    <nav class="bnav">
+      <a class="on" href="#"><svg width="22" height="22"><use href="#i-house"/></svg>Home</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-compass"/></svg>Eksplorasi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-hand"/></svg>Kontribusi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Profil</a>
+    </nav>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 3. DETAIL KATA -->
+<figure class="unit">
+  <figcaption>Detail kata <span>- push, terverifikasi</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader sub">
+      <button class="iconbtn"><svg width="20" height="20"><use href="#i-back"/></svg></button>
+      <div class="htitle">Kata</div>
+      <button class="iconbtn"><svg width="18" height="18"><use href="#i-bookmark"/></svg></button>
+      <button class="iconbtn"><svg width="18" height="18"><use href="#i-share"/></svg></button>
+      <button class="iconbtn"><svg width="18" height="18"><use href="#i-more"/></svg></button>
+    </div>
+    <div class="scroll"><div class="body" style="padding-top:4px">
+      <div class="detail-top">
+        <div class="lemma" style="font-size:30px">Bedakok</div>
+        <div class="meta-row">
+          <span class="chip">kata kerja</span>
+          <span class="badge ok"><span class="dot"></span>Terverifikasi</span>
+        </div>
+        <div class="audio-row">
+          <svg width="16" height="16" style="color:var(--fg)"><use href="#i-play"/></svg>
+          Dengar pelafalan
+        </div>
+      </div>
+
+      <div class="block">
+        <span class="bh">Arti</span>
+        <span class="bd">berpelukan; saling memeluk erat (biasanya anak kecil atau orang yang rindu).</span>
+      </div>
+
+      <div class="block">
+        <span class="bh">Contoh kalimat</span>
+        <div class="example">
+          <span class="sbs">"Dua kandung itu bedakok waktu jumpa lagi."</span>
+          <span class="id">Dua saudara itu berpelukan saat bertemu lagi.</span>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <div class="tile">
+          <span class="lead"><svg width="18" height="18"><use href="#i-msg"/></svg></span>
+          <div class="tmain">
+            <span class="tt">Komentar</span>
+            <span class="ts">3 orang membahas kata ini</span>
+          </div>
+          <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Kata terkait</b></div>
+        <div class="tgroup">
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Bejumpe</span>
+              <span class="ts">Berjumpa</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Bedannyot</span>
+              <span class="ts">Berdenyut</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Beselili</span>
+              <span class="ts">Berputar di sekeliling kita</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 4. DETAIL KATA (menunggu) -->
+<figure class="unit">
+  <figcaption>Detail kata <span>- menunggu pengecekan (amber)</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader sub">
+      <button class="iconbtn"><svg width="20" height="20"><use href="#i-back"/></svg></button>
+      <div class="htitle">Kata</div>
+      <button class="iconbtn"><svg width="18" height="18"><use href="#i-bookmark"/></svg></button>
+      <button class="iconbtn"><svg width="18" height="18"><use href="#i-share"/></svg></button>
+      <button class="iconbtn"><svg width="18" height="18"><use href="#i-more"/></svg></button>
+    </div>
+    <div class="scroll"><div class="body" style="padding-top:4px">
+      <div class="detail-top">
+        <div class="lemma" style="font-size:30px">Kutis</div>
+        <div class="meta-row">
+          <span class="chip">kata kerja</span>
+          <span class="badge warn"><span class="dot"></span>Menunggu pengecekan</span>
+        </div>
+      </div>
+
+      <div class="note">Kata ini belum diperiksa tim Sambasku. Artinya atau terjemahannya bisa saja kurang tepat.</div>
+
+      <div class="block">
+        <span class="bh">Arti</span>
+        <span class="bd">ambil sedikit dengan ujung jari (contohnya garam atau bumbu).</span>
+      </div>
+
+      <div class="block">
+        <span class="bh">Contoh kalimat</span>
+        <div class="example">
+          <span class="sbs">"Kutis sikit garam nya."</span>
+          <span class="id">Ambil sedikit garamnya.</span>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <div class="tile">
+          <span class="lead"><svg width="18" height="18"><use href="#i-msg"/></svg></span>
+          <div class="tmain">
+            <span class="tt">Komentar</span>
+            <span class="ts">Belum ada komentar</span>
+          </div>
+          <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+        </div>
+      </div>
+
+      <div class="stat-line">
+        <svg width="15" height="15" style="flex-shrink:0"><use href="#i-info"/></svg>
+        Usul perbaikan untuk kata ini langsung tayang sampai diperiksa tim.
+      </div>
+    </div></div>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 5. EKSPLORASI -->
+<figure class="unit">
+  <figcaption>Eksplorasi <span>- tab 2, kategori curated</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader">
+      <div class="htitle">Eksplorasi</div>
+      <button class="iconbtn"><svg width="19" height="19"><use href="#i-search"/></svg></button>
+    </div>
+    <div class="scroll"><div class="body">
+      <div class="searchbar">
+        <svg width="16" height="16"><use href="#i-search"/></svg>
+        Cari di kategori mana saja
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Jelajahi kategori</b></div>
+        <div class="tgroup">
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-lang"/></svg></span>
+            <div class="tmain"><span class="tt">Bahasa &amp; budaya</span><span class="ts">Ungkapan, sapaan, adat</span></div>
+            <span class="count">132 kata</span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-palmtree"/></svg></span>
+            <div class="tmain"><span class="tt">Wisata &amp; tempat</span><span class="ts">Destinasi di Sambas</span></div>
+            <span class="count">45 kata</span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-map"/></svg></span>
+            <div class="tmain"><span class="tt">Peta Sambas</span><span class="ts">Kecamatan dan titik tempat</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-utensils"/></svg></span>
+            <div class="tmain"><span class="tt">Kuliner</span><span class="ts">Makanan dan minuman khas</span></div>
+            <span class="count">61 kata</span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-sprout"/></svg></span>
+            <div class="tmain"><span class="tt">Alam &amp; lingkungan</span><span class="ts">Cuaca, hewan, tanaman</span></div>
+            <span class="count">84 kata</span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-activity"/></svg></span>
+            <div class="tmain"><span class="tt">Kehidupan sehari-hari</span><span class="ts">Rumah, kerja, keluarga</span></div>
+            <span class="count">97 kata</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Sedang ramai</b><a href="#">Lihat semua</a></div>
+        <div class="tgroup">
+          <div class="tile">
+            <div class="tmain"><span class="tt">Yak bayyak</span><span class="ts">Ungkapan untuk sesuatu yang wah</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain"><span class="tt">Belungkor</span><span class="ts">Tikar anyaman sejenis pandan</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain"><span class="tt">Bedande'</span><span class="ts">Teater tradisional Sambas</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <nav class="bnav">
+      <a href="#"><svg width="22" height="22"><use href="#i-house"/></svg>Home</a>
+      <a class="on" href="#"><svg width="22" height="22"><use href="#i-compass"/></svg>Eksplorasi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-hand"/></svg>Kontribusi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Profil</a>
+    </nav>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 6. KONTRIBUSI -->
+<figure class="unit">
+  <figcaption>Kontribusi <span>- tab 3, hub aksi</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader"><div class="htitle">Kontribusi</div></div>
+    <div class="scroll"><div class="body">
+      <p class="intro">Bantu kamus tumbuh. Pilih satu yang kamu bisa sekarang.</p>
+
+      <div class="tgroup">
+        <div class="tile" style="min-height:60px">
+          <span class="lead" style="color:var(--fg)"><svg width="20" height="20"><use href="#i-plus"/></svg></span>
+          <div class="tmain">
+            <span class="tt">Usulkan kata baru</span>
+            <span class="ts">Kata Sambas yang belum ada di kamus</span>
+          </div>
+          <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+        </div>
+      </div>
+
+      <div class="stat-line">
+        <svg width="15" height="15" style="flex-shrink:0"><use href="#i-hand"/></svg>
+        Kontribusi kamu: 4 kata sudah tayang, 1 menunggu pengecekan
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Tugas cepat</b></div>
+        <div class="tgroup">
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-listcheck"/></svg></span>
+            <div class="tmain"><span class="tt">Beri suara kata</span><span class="ts">Setujui atau tolak usulan baru</span></div>
+            <span class="badge warn"><span class="dot"></span>8 menunggu</span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-lang"/></svg></span>
+            <div class="tmain"><span class="tt">Bantuan terjemahan</span><span class="ts">Bantu terjemah kalimat ke Indonesia</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-msg"/></svg></span>
+            <div class="tmain"><span class="tt">Usul contoh kalimat</span><span class="ts">Tambah contoh yang lebih pas</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Lainnya</b></div>
+        <div class="tgroup">
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-bug"/></svg></span>
+            <div class="tmain"><span class="tt">Laporkan masalah</span><span class="ts">Kata salah atau aplikasi berantakan</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <span class="lead"><svg width="18" height="18"><use href="#i-shield"/></svg></span>
+            <div class="tmain"><span class="tt">Jadi verifikator</span><span class="ts">Ajukan diri untuk memeriksa kata</span></div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <nav class="bnav">
+      <a href="#"><svg width="22" height="22"><use href="#i-house"/></svg>Home</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-compass"/></svg>Eksplorasi</a>
+      <a class="on" href="#"><svg width="22" height="22"><use href="#i-hand"/></svg>Kontribusi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Profil</a>
+    </nav>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 7. USUL KATA (form) -->
+<figure class="unit">
+  <figcaption>Usulkan kata <span>- form + validasi</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader sub">
+      <button class="iconbtn"><svg width="20" height="20"><use href="#i-back"/></svg></button>
+      <div class="htitle">Usulkan kata</div>
+    </div>
+    <div class="scroll"><div class="body" style="gap:12px">
+      <div class="field">
+        <label>Kata Sambas</label>
+        <input type="text" placeholder="mis. bedakok" value="Ngabar">
+        <span class="hint">Cek ejaan sebaik mungkin. Nanti bisa diperbaiki.</span>
+      </div>
+
+      <div class="field err">
+        <label>Arti dalam bahasa Indonesia</label>
+        <input type="text" placeholder="mis. berpelukan">
+        <span class="msg">Arti belum diisi</span>
+      </div>
+
+      <div class="field">
+        <label>Jenis kata</label>
+        <div class="chips">
+          <span class="chip">kata benda</span>
+          <span class="chip on">kata kerja</span>
+          <span class="chip">kata sifat</span>
+          <span class="chip">kata ganti</span>
+          <span class="chip">keterangan</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Contoh kalimat <span style="color:var(--fg3);font-weight:400">(opsional)</span></label>
+        <textarea rows="2" placeholder="Kalimat pakai kata ini, beserta artinya">Air kali naik ngabar saja.</textarea>
+      </div>
+
+      <div class="field">
+        <label>Gambar <span style="color:var(--fg3);font-weight:400">(opsional)</span></label>
+        <div class="thumbs">
+          <div class="thumb">JPG</div>
+          <div class="thumb"><svg width="18" height="18"><use href="#i-imgplus"/></svg>Tambah</div>
+        </div>
+      </div>
+
+      <div class="stat-line">
+        <svg width="15" height="15" style="flex-shrink:0"><use href="#i-info"/></svg>
+        Dikirim sebagai tamu. Kata belum tayang. Tim akan memeriksanya dulu.
+      </div>
+
+      <button class="btn primary">Kirim</button>
+    </div></div>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 8. PROFIL (login) -->
+<figure class="unit">
+  <figcaption>Profil <span>- login, FTileGroup</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader">
+      <div class="htitle">Profil</div>
+      <button class="iconbtn"><svg width="19" height="19"><use href="#i-bell"/></svg></button>
+      <button class="iconbtn"><svg width="19" height="19"><use href="#i-moon"/></svg></button>
+    </div>
+    <div class="scroll"><div class="body">
+      <div class="identity">
+        <div class="avatar">R</div>
+        <div class="idmain">
+          <span class="n">Rasyid <span class="role">Kontributor</span></span>
+          <span class="u">@rasyid.sbs</span>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Saya</b></div>
+        <div class="tgroup">
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-bell"/></svg></span><div class="tmain"><span class="tt">Notifikasi</span><span class="ts">2 belum dibaca</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-hand"/></svg></span><div class="tmain"><span class="tt">Kontribusi Saya</span><span class="ts">4 tayang, 1 menunggu</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-bookmark"/></svg></span><div class="tmain"><span class="tt">Bookmark</span><span class="ts">12 kata disimpan</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-listcheck"/></svg></span><div class="tmain"><span class="tt">Vote</span><span class="ts">Saran yang kamu dukung</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-msg"/></svg></span><div class="tmain"><span class="tt">Komentar</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-bug"/></svg></span><div class="tmain"><span class="tt">Laporkan Masalah</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Akun</b></div>
+        <div class="tgroup">
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-user"/></svg></span><div class="tmain"><span class="tt">Edit profil</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-link"/></svg></span><div class="tmain"><span class="tt">Akun terhubung</span><span class="ts">Google</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-lock"/></svg></span><div class="tmain"><span class="tt">Ubah sandi</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-trash"/></svg></span><div class="tmain"><span class="tt">Hapus akun</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Tampilan</b></div>
+        <div class="tgroup">
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-moon"/></svg></span><div class="tmain"><span class="tt">Mode tema</span><span class="ts">Ikut sistem</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-palette"/></svg></span><div class="tmain"><span class="tt">Palet warna</span><span class="ts">Zinc</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Lainnya</b></div>
+        <div class="tgroup">
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-info"/></svg></span><div class="tmain"><span class="tt">Tentang</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-logout"/></svg></span><div class="tmain"><span class="tt">Keluar</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+        </div>
+      </div>
+    </div></div>
+
+    <nav class="bnav">
+      <a href="#"><svg width="22" height="22"><use href="#i-house"/></svg>Home</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-compass"/></svg>Eksplorasi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-hand"/></svg>Kontribusi</a>
+      <a class="on" href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Profil</a>
+    </nav>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 9. PROFIL (tamu) -->
+<figure class="unit">
+  <figcaption>Profil <span>- tamu, CTA login di sini (bukan home)</span></figcaption>
+  <div class="phone"><div class="screen light">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader"><div class="htitle">Profil</div></div>
+    <div class="scroll"><div class="body">
+      <div class="guestbox">
+        <p>Kamu pakai sebagai tamu. Cari dan baca kata tetap bisa. Masuk untuk menyimpan bookmark dan kirim kontribusi.</p>
+        <button class="btn primary">Masuk</button>
+        <button class="btn ghost">Daftar</button>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Saya</b></div>
+        <div class="tgroup">
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-bookmark"/></svg></span><div class="tmain"><span class="tt">Bookmark</span><span class="ts">3 kata di perangkat ini</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-bug"/></svg></span><div class="tmain"><span class="tt">Laporkan Masalah</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Tampilan</b></div>
+        <div class="tgroup">
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-moon"/></svg></span><div class="tmain"><span class="tt">Mode tema</span><span class="ts">Ikut sistem</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-palette"/></svg></span><div class="tmain"><span class="tt">Palet warna</span><span class="ts">Zinc</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Lainnya</b></div>
+        <div class="tgroup">
+          <div class="tile"><span class="lead"><svg width="18" height="18"><use href="#i-info"/></svg></span><div class="tmain"><span class="tt">Tentang</span></div><span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span></div>
+        </div>
+      </div>
+    </div></div>
+
+    <nav class="bnav">
+      <a href="#"><svg width="22" height="22"><use href="#i-house"/></svg>Home</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-compass"/></svg>Eksplorasi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-hand"/></svg>Kontribusi</a>
+      <a class="on" href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Profil</a>
+    </nav>
+  </div></div>
+</figure>
+
+<!-- ============================================================ 10. HOME (dark) -->
+<figure class="unit">
+  <figcaption>Home <span>- dark, Zinc gelap</span></figcaption>
+  <div class="phone"><div class="screen dark">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="16" height="16"><use href="#i-wifi"/></svg><svg width="24" height="12"><use href="#i-batt"/></svg></span></div>
+    <div class="fheader">
+      <div class="htitle">SambasKu</div>
+      <button class="iconbtn"><svg width="20" height="20"><use href="#i-moon"/></svg></button>
+    </div>
+    <div class="scroll"><div class="body">
+      <div class="searchbar">
+        <svg width="16" height="16"><use href="#i-search"/></svg>
+        Cari kata Sambas atau Indonesia
+      </div>
+
+      <div class="today">
+        <span class="lbl">Kata hari ini</span>
+        <div class="lemma-row">
+          <span class="lemma">Layau</span>
+          <button class="iconbtn" style="margin-left:auto"><svg width="18" height="18"><use href="#i-play"/></svg></button>
+        </div>
+        <div class="gloss">galau; resah tidak menentu</div>
+        <div class="meta-row">
+          <span class="chip">kata sifat</span>
+          <span class="badge ok"><span class="dot"></span>Terverifikasi</span>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <div class="tile">
+          <span class="lead"><svg width="18" height="18"><use href="#i-book"/></svg></span>
+          <div class="tmain">
+            <span class="tt">Daftar kata A-Z</span>
+            <span class="ts">Semua kata dari A sampai Z</span>
+          </div>
+          <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-h"><b>Terbaru</b><a href="#">Lihat semua</a></div>
+        <div class="tgroup">
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Belungkin <span class="badge ok"><span class="dot"></span>Terverifikasi</span></span>
+              <span class="ts">Siput</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Sikkit <span class="badge ok"><span class="dot"></span>Terverifikasi</span></span>
+              <span class="ts">Sedikit</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Kabut <span class="badge warn"><span class="dot"></span>Menunggu pengecekan</span></span>
+              <span class="ts">Awan rendah</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+          <div class="tile">
+            <div class="tmain">
+              <span class="tt">Ngolok <span class="badge warn"><span class="dot"></span>Menunggu pengecekan</span></span>
+              <span class="ts">Mengejek</span>
+            </div>
+            <span class="sfx"><svg width="16" height="16"><use href="#i-chevron"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <nav class="bnav">
+      <a class="on" href="#"><svg width="22" height="22"><use href="#i-house"/></svg>Home</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-compass"/></svg>Eksplorasi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-hand"/></svg>Kontribusi</a>
+      <a href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Profil</a>
+    </nav>
+  </div></div>
+</figure>
+
+</main>
+</body>
+</html>

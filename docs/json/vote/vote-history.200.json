@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "01JDVOTESMAKATN00000000001",
+      "target_type": "word",
+      "target_id": "01JDWORDMAKATN0000000000A",
+      "value": 1,
+      "voted_at": "2026-09-21T10:00:00.000Z",
+      "word": {
+        "id": "01JDWORDMAKATN0000000000A",
+        "lemma": "makatn",
+        "word_type": "lemma",
+        "is_verified": true
+      }
+    },
+    {
+      "id": "01JDVOTEDELETED00000000002",
+      "target_type": "meaning",
+      "target_id": "01JDMEANINGGONE0000000000B",
+      "value": -1,
+      "voted_at": "2026-09-20T08:30:00.000Z",
+      "word": null
+    }
+  ],
+  "meta": {
+    "limit": 20,
+    "next_cursor": null,
+    "has_more": false
+  }
+}

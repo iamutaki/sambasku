@@ -1,0 +1,21 @@
+{
+  "success": true,
+  "data": {
+    "id": "01JDBUGREPORT0000000000000",
+    "user_id": null,
+    "username": null,
+    "device_id": "01JDDEVICEBUG000000000000",
+    "description": "Tombol upvote tidak merespons di halaman detail kata",
+    "images": [],
+    "app_version": "0.1.0",
+    "platform": "android",
+    "status": "resolved",
+    "resolution_note": "Sudah diperbaiki",
+    "resolved_by": "01JDADMINULID000000000000A",
+    "resolved_at": "2026-09-21T13:00:00.000Z",
+    "created_by": null,
+    "updated_by": "01JDADMINULID000000000000A",
+    "created_at": "2026-09-21T12:00:00.000Z",
+    "updated_at": "2026-09-21T13:00:00.000Z"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "error_code": "DELETION_CODE_INVALID",
+  "message": "Kode tidak valid atau sudah kedaluwarsa",
+  "details": null
+}

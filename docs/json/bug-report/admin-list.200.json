@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "01JDBUGREPORT0000000000000",
+      "user_id": null,
+      "username": null,
+      "device_id": "01JDDEVICEBUG000000000000",
+      "description": "Tombol upvote tidak merespons di halaman detail kata",
+      "images": [
+        {
+          "url": "https://ik.imagekit.io/test/bug-reports/x.jpg",
+          "provider_file_id": "file_bug_x"
+        }
+      ],
+      "app_version": "0.1.0",
+      "platform": "android",
+      "status": "open",
+      "resolution_note": null,
+      "resolved_by": null,
+      "resolved_at": null,
+      "created_by": null,
+      "updated_by": null,
+      "created_at": "2026-09-21T12:00:00.000Z",
+      "updated_at": null
+    }
+  ],
+  "meta": {
+    "limit": 20,
+    "next_cursor": null,
+    "has_more": false
+  }
+}
