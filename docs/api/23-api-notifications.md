@@ -65,6 +65,7 @@ Item:
   "type": "contribution_approved",
   "title": "Usulan disetujui",
   "body": "Usulan kata Anda telah disetujui dan dipublikasikan.",
+  "body_type": "plain",
   "image_url": null,
   "target_kind": "contribution",
   "target_id": "01H...",
@@ -75,6 +76,9 @@ Item:
 }
 ```
 
+`body_type`: `plain` | `html` | `md` | `webview` - cara render `body` di
+halaman detail (sama seperti body pengumuman #124). Transactional selalu
+`plain`; campaign mengikuti `body_type` campaign.
 `image_url`: opsional (null untuk notifikasi transactional). Campaign
 bisa mengisi HTTPS URL gambar untuk thumbnail inbox / rich push.
 `type`: `contribution_approved` | `contribution_rejected` |

@@ -524,6 +524,7 @@ entitas TIDAK boleh menulis ulang sejarah feed (pembelajaran issue #86:
 | `search.miss` | pencarian tanpa hasil (visible) | null |
 | `user.joined` | akun terverifikasi | user baru |
 | `card.shared` | share kartu kata | yang share |
+| `announcement` | admin buat/edit pengumuman (#102) | admin (root/admin) |
 
 Yang BUKAN event (tetap dipertahankan privat): kontribusi pending/rejected,
 word reports, teks bebas usulan (hanya aksi + lemma), edit tanpa perubahan.
@@ -554,3 +555,60 @@ word reports, teks bebas usulan (hanya aksi + lemma), edit tanpa perubahan.
    timeline profil membaca payload yang sama — tidak ada kalkulasi live
    read-time untuk copy. Flip arah vote = timpa payload (dedupe key sama,
    state terakhir), bukan event baru.
+
+# 26. Read-path hemat subrequest (JOIN, bukan N panggilan)
+
+Satu request HTTP = satu Worker invocation di Cloudflare; setiap query ke
+Turso = 1 subrequest, limit default 50/invocation. Issue mobile#103: feed
+meledak ~100+ subrequest per request → `Too many subrequests by single
+Worker invocation`. Karena itu:
+
+1. **Dilarang N+1 di read-path**: `for`/`.map`/`.forEach` berisi `await`
+   query per baris = bug. Ambil semua field yang dibutuhkan dalam SATU
+   query via `JOIN`/`LEFT JOIN` (kolom yang dipakai saja — proyeksi ketat),
+   atau batch `IN (...)` + resolve via `Map`, lalu transform row ke bentuk
+   wire secara synchronous.
+2. **`Promise.all` atas beberapa panggilan repo juga subrequest** — gabung
+   jadi satu query bila bisa (contoh: mode merge profil publik dulu 4
+   panggilan paralel → kini 1 query mode `merged`).
+3. **Jangan memanggil API/service lain berulang per baris** dalam satu
+   request — persis pola sama, batas subrequest berlaku keluar juga.
+4. **Wajib test budget query** untuk endpoint feed/timeline: spy
+   `client.execute` lalu assert jumlah query per request kecil (≤3).
+   Acuan: `api/src/modules/activity/__tests__/e2e/v1/activity-query-count.e2e.test.ts`.
+5. Mitigasi `wrangler.toml` `[limits] subrequests` hanya jaring pengaman —
+   bukan alasan tetap boros; target 1–2 query per request.
+
+# 27. Satu pekerjaan selesai = commit + push sebelum pekerjaan baru
+
+Setiap kali satu pekerjaan **selesai** (test hijau, gate lulus) dan akan
+**dimulai pekerjaan baru**, WAJIB menuntaskan pekerjaan lama terlebih dahulu:
+
+1. **Commit** perubahan pekerjaan itu (pathspec eksplisit, file kerjaan
+   itu saja — jangan campur WIP pekerjaan lain).
+2. **Push** ke staging: lewat feature branch → push branch + buat PR
+   (merge = keputusan Tuan); bila memang kerja langsung di `staging` →
+   push ke `staging`.
+3. Baru kemudian mulai pekerjaan berikutnya.
+
+DILARANG memulai pekerjaan baru dengan pekerjaan lama masih menggantung
+tidak di-commit / tidak di-push. WIP numpuk lintas pekerjaan = akar dari
+working tree kotor, stash berlapis, dan kehilangan kerja (pahit dari
+sesi-sesi sebelumnya).
+
+Batas: WIP yang sengaja ditunda (mis. menunggu keputusan Tuan) harus
+diketahui Tuan eksplisit — bukan diam-diam ditinggal.
+
+# 28. Data repo (`data/`): purge CDN otomatis, file baru langsung live
+
+Repo `data/` disajikan via jsDelivr `cdn.jsdelivr.net/gh/sambasku/data@main/...`.
+Sejak #100 ada GitHub Action `data/.github/workflows/purge-jsdelivr.yml`:
+
+1. Setiap push ke `main` repo data = **purge otomatis seluruh file** (chunk 50
+   path per request, batas API purge.jsdelivr.net). Jangan purge manual.
+2. Menambah file data baru = commit ke `main` saja; file baru otomatis
+   ter-cover (purge penuh, bukan diff-based). URL akses:
+   `https://cdn.jsdelivr.net/gh/sambasku/data@main/<path>` setelah Action hijau.
+3. Setelah push, pastikan Action hijau (tab Actions) sebelum mengandalkan
+   file baru; pending purge maksimal beberapa menit.
+4. Branch data repo hanya `main` (tidak ada staging) - review sebelum push.

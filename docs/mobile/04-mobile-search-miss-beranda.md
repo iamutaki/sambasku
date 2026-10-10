@@ -16,7 +16,10 @@ Status fondasi saat dokumen ini dibuat (JANGAN diduplikasi):
 - **Kontrak tampil beranda**: mobile HANYA consume endpoint publik di
   atas. Jangan panggil `/admin/search-misses`. Jangan tampilkan miss
   yang belum diizinkan tayang - server sudah memfilter; client cukup
-  render `data[]` apa adanya.
+  render `data[]` apa adanya. Satu-satunya pengecualian: panel
+  verifikator (#88, lihat § Panel verifikator di bawah) memanggil
+  endpoint admin - di luar konteks beranda publik, gate role di kedua
+  sisi.
 - SUDAH ADA (mobile, sebagian): fitur `features/search_miss` (DTO/
   repo/use case); banner `_SearchMissBanner` di `HomeSearchPage`;
   `ContributePage(initialLemma, initialSearchIn)`; route
@@ -81,9 +84,58 @@ Command verifikasi: flutter analyze && flutter test
   di boundary (DTO ↔ entity ↔ query).
 - Soft-check server (12-api): pastikan prefill lemma/translation sesuai
   direction sebelum submit supaya tidak kena SEARCH_MISS_TERM_MISMATCH.
-- Jangan panggil endpoint admin dari mobile.
+- Jangan panggil endpoint admin dari mobile (kecuali panel verifikator
+  #88 di bawah).
 - Empty-state search (query user sendiri 0 hasil) tetap boleh usul tanpa
   `miss_id`; pencatatan miss tetap di backend saat search - kartu akan
   muncul untuk user lain setelah hit tercatat.
 - Urutan field makna & KBBI: ikuti keputusan 12-api §6-7 (satu sumber
   kebenaran bersama admin).
+
+---
+
+## Panel Verifikator (#88)
+
+Satu-satunya permukaan mobile yang memanggil endpoint admin
+(`GET /api/v1/admin/search-misses` + `PATCH /:id`) — sah karena endpoint
+dibungkus `authenticate + authorizeRole('admin','root','reviewer')`
+(API `search-miss.routes.ts`) dan route mobile dibungkus
+`ReviewGate(mode: ReviewGateMode.contribution)` + gate Dart
+`canReviewQueue(role)`. Contributor/editor = 403 di API, tile tidak
+ditampilkan di hub.
+
+- Entry: hub Area Verifikator → tile **"Pencarian kosong"** →
+  `/review/search-misses` (`ReviewRouter.searchMisses`).
+- Isi: miss **belum terjawab** (`fulfilled=false`) — panel = kerjaan
+  verifikator, bukan arsip; sort terbaru (id DESC).
+- **Mekanisme: deck kartu swipe** (sama seperti area verifikator,
+  `SwipeDecisionCard`): satu kartu tayang, aksi via gesture ATAU
+  action bar `[Lewati] [Singkirkan] [Tayang]`.
+  - **Pindah kartu optimis**: advance sync, request menyusul — TIDAK
+    menunggu response selesai. Kalau request gagal → kartu kembali ke
+    depan + toast destructive (pola `reinsertAtFront` verif).
+  - **Kanan / tombol Tayang** (hanya `is_visible=false`) →
+    `PATCH /api/v1/admin/search-misses/:id {is_visible:true}` → miss
+    tayang di beranda publik ("Dicari warga") semua user. Event feed
+    `search_miss` show/hide di-emit API otomatis — mobile tanpa kerjaan
+    feed. Sudah tayang: swipe kanan spring back, tombol Tayang disabled;
+    unpublish = console (admin/root), bukan mobile.
+  - **Kiri / tombol Singkirkan** → `POST /:id/dismiss` (soft delete;
+    spam / tidak layak).
+  - **Atas / tombol Lewati** → `POST /:id/skip` = skip **per user**
+    (`user_skips`, `target_type='search_miss'`): miss hilang dari panel
+    user ini saja, verifikator lain tetap melihatnya; idempotent,
+    tanpa expiry. List admin otomatis exclude skip user aktif
+    (`skipByUserId`).
+  - **Tap kartu** → `/contribute?lemma=&search_in=&miss_id=` prefill
+    (verifikator membuat usulan sendiri; param `guest: 1` TIDAK dikirim
+    — verifikator selalu login). `search_in=lemma` → field lemma Sambas,
+    `translation` → field terjemahan Indonesia.
+  - Deck habis → pesan "Selesai" + **Muat ulang**.
+- File: `lib/features/review/presentation/pages/review_search_miss_page.dart`,
+  repo `data/repositories/review_search_miss_repository_impl.dart`,
+  entity `domain/entities/review_search_miss.dart` (plain class +
+  parser manual, mengikuti konvensi feature review — bukan freezed).
+- Siklus hidup miss: belum tayang → tayang (panel/console) → terjawab
+  (term jadi kata di kamus; `is_fulfilled` derived SQL live) → hilang
+  dari beranda publik otomatis.
