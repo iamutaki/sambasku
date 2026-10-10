@@ -494,7 +494,16 @@ CLI `agent-reach` terpasang (via uv). Skill lengkap: `~/.agents/skills/agent-rea
 | RSS | `feedparser` |
 | Semantic search | `mcporter call exa.web_search_exa query="..." numResults=5` |
 
-Prioritas: docs mau di-index permanen pakai `ctx_fetch_and_index`; riset one-off pakai Agent Reach.
+**Moli** (`~/.local/bin/moli`, Built in Rust): headless browser AI agents. Install: `curl --proto '=https' --tlsv1.2 -fsSL https://github.com/lexmount/moli/releases/latest/download/moli-installer.sh | sh`.
+
+| Kebutuhan | Cara |
+|-----------|------|
+| Baca HTML/MD/Semantic tree | `moli fetch --dump markdown --wait-until done URL` |
+| Screenshot viewport | `moli fetch --layout --dump screenshot URL > out.png` |
+| Ekstrak nilai JS dari DOM | `moli fetch --dump json --eval "document.title" URL` |
+| Browser interaktif (klik, scroll, dll.) | `moli serve --layout` → Playwright connect over CDP: `chromium.connectOverCDP("http://127.0.0.1:9222")` |
+
+Prioritas: docs mau di-index permanen pakai `ctx_fetch_and_index`; riset one-off pakai Agent Reach. Kebutuhan browser interaktif (login, scraping dinamis, Google Maps share link, dll.) → Moli + Playwright CDP. Kebutuhan read-only tanpa JS → `r.jina.ai` dulu (lebih murah).
 Channel login (Twitter, Reddit, dll) belum aktif - minta user dulu. Cek status: `agent-reach doctor`.
 
 ---
