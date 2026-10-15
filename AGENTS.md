@@ -612,3 +612,17 @@ Sejak #100 ada GitHub Action `data/.github/workflows/purge-jsdelivr.yml`:
 3. Setelah push, pastikan Action hijau (tab Actions) sebelum mengandalkan
    file baru; pending purge maksimal beberapa menit.
 4. Branch data repo hanya `main` (tidak ada staging) - review sebelum push.
+
+---
+
+# 29. Environment URLs (staging)
+
+Jangan asal tebak URL deployment. Staging per layanan:
+
+| Layanan | URL |
+|---------|-----|
+| Mobile (API) | https://sambasku-staging.iamutaki.com |
+| Web | https://sambasku-web-staging.ibnuul.workers.dev |
+| Console | https://console-sambasku-staging.iamutaki.com |
+
+Produksi: tanya Tuan, tidak di-commit.
