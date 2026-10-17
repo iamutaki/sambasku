@@ -151,14 +151,17 @@ ENDPOINT (semua di bawah prefix /api/v1 - Section 11):
                "verification_required": true } }
 
 2. POST /api/v1/auth/login
-   Body: { email, password, client_type? }
+   Body: { identifier, password, client_type? }
+   identifier: email ATAU username (mobile kirim field 'identifier';
+   'email' legacy masih diterima, identifier menang bila keduanya ada).
    client_type: 'web' (default) | 'mobile' - pilih kanal refresh token:
 
-   Use case: LoginUserUseCase
-   - Cari user by email via UserRepository
+Use case: LoginUserUseCase
+- Cari user by email (identifier ada '@') atau by username (tanpa '@')
+  via UserRepository
    - Bandingkan password via PasswordHasherPort.compare()
-   - Pesan error generik "Email atau password salah" untuk kasus
-     gagal enumerasi (email tidak ada / password salah / user
+- Pesan error generik "Email atau password salah" untuk kasus
+  gagal enumerasi (identifier tidak ada / password salah / user
      soft-deleted / user dinonaktifkan is_active=false)
    - Password benar + email_verified=false → 403 EMAIL_NOT_VERIFIED,
      details [{ field: "email", message: "<email>" }], TANPA token
