@@ -80,7 +80,11 @@ modules/word/infrastructure/word.repository.impl.ts
   # - tetap published + belum soft-delete, cursor + limit tidak berubah.
   # - HASIL TETAP SATU BARIS PER KATA (EXISTS, bukan JOIN yang
   #   menduplikasi) - cursor words.id desc aman tanpa DISTINCT ON.
-  # searchByTranslation TIDAK berubah.
+  # UPDATE 0069 (FTS5): q multi-kata dipecah per term (OR), page pertama
+  #   memakai index FTS bm25 (ranking relevansi, cursor "o:<offset>");
+  #   fallback LIKE words.id desc bila index kosong/error. Cursor tetap
+  #   opaque bagi client - dua format diterima validator search.
+  # searchByTranslation TIDAK berubah (masih LIKE per term OR).
 modules/word/presentation/v1/word.controller.ts (+ response schema)
   # UBAH: item hasil search lemma membawa field opsional
   # matched_variant (string|null): form variasi yang cocok dengan q

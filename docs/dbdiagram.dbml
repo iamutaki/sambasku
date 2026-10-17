@@ -1166,3 +1166,12 @@ Table wa_usage {
   updated_at timestamp
   updated_by varchar(26) [ref: > users.id]
 }
+
+// FTS5 virtual table (migration 0069) - pencarian kata (lemma + variasi +
+// terjemahan) dengan skor bm25. Diisi trigger dari words/word_variants/
+// meaning_translations; bukan tabel relasional biasa.
+Table words_search_fts [note: 'FTS5 trigram virtual table'] {
+  text text [note: 'isi terindeks: lemma / form / translation_text']
+  word_id varchar(26) [note: 'UNINDEXED - ref words.id']
+  kind text [note: 'lemma | variant | translation (UNINDEXED)']
+}
